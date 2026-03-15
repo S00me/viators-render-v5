@@ -19,12 +19,6 @@ html, body {
   overflow-x: hidden;
 }
 
-body {
-  background-position: center;
-  background-size: cover;
-  padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-}
-
 .leaflet-container {
   background-color: #000 !important;
 }
