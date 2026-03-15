@@ -32,20 +32,17 @@ export function Hero() {
       const originalBgSize = document.body.style.backgroundSize;
       const originalBgPos = document.body.style.backgroundPosition;
       const originalBgRepeat = document.body.style.backgroundRepeat;
-      const originalBgAttachment = document.body.style.backgroundAttachment;
 
       document.body.style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.2), black), url('${bgImage}')`;
       document.body.style.backgroundSize = 'cover';
       document.body.style.backgroundPosition = 'center center';
       document.body.style.backgroundRepeat = 'no-repeat';
-      document.body.style.backgroundAttachment = 'fixed';
 
       return () => {
         document.body.style.backgroundImage = originalBg;
         document.body.style.backgroundSize = originalBgSize;
         document.body.style.backgroundPosition = originalBgPos;
         document.body.style.backgroundRepeat = originalBgRepeat;
-        document.body.style.backgroundAttachment = originalBgAttachment;
       };
     }
   }, [bgImage]);
@@ -58,7 +55,7 @@ export function Hero() {
   };
 
   return (
-    <section id="hero" className="h-screen relative overflow-hidden flex items-center justify-center bg-black">
+    <section id="hero" className="min-h-[100dvh] relative overflow-hidden flex items-center justify-center bg-black">
       <motion.div 
         className="absolute inset-0 z-0"
         style={{ y, scale }}
