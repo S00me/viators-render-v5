@@ -44,15 +44,16 @@ export function Footer() {
           <p className="text-zinc-500 max-w-xs text-sm leading-relaxed">
             {t('A community dedicated to high-altitude exploration and the shared experience of the mountains.')}
           </p>
-          <div className="flex gap-4 justify-center md:justify-start">
+          <div className="flex gap-4 justify-center md:justify-start items-center">
             <a href="https://www.instagram.com/_viators/" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-white transition-colors">
               <Instagram size={18} />
             </a>
             <button className="text-zinc-500 hover:text-white transition-colors cursor-not-allowed opacity-50" title={t('Coming Soon')}>
               <Twitter size={18} />
             </button>
-            <a href="mailto:viatoors@gmail.com" className="text-zinc-500 hover:text-white transition-colors">
+            <a href="mailto:viatoors@gmail.com" className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors">
               <Mail size={18} />
+              <span className="text-sm">viatoors@gmail.com</span>
             </a>
           </div>
         </div>
