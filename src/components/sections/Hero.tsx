@@ -6,11 +6,9 @@ import { Link } from 'react-router-dom';
 
 export function Hero() {
   const { scrollY } = useScroll();
-  // Since the background is now fixed to the viewport, we move it UP (negative y) as the user scrolls down
-  // to create a parallax effect where the background scrolls slower than the foreground.
-  const y = useTransform(scrollY, [0, 500], [0, -150]);
+  const y = useTransform(scrollY, [0, 500], [0, 200]);
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
-  const scale = useTransform(scrollY, [0, 500], [1, 1.05]);
+  const scale = useTransform(scrollY, [0, 500], [1, 1.1]);
   const [bgImage, setBgImage] = useState<string | null>(null);
   const { language, t } = useLanguage();
 
@@ -35,11 +33,9 @@ export function Hero() {
   };
 
   return (
-    <section id="hero" className="min-h-[100svh] relative flex items-center justify-center bg-transparent">
-      {/* Fixed Background for Parallax and Safe Area Coverage. 
-          This avoids iOS Safari background-attachment bugs while covering the safe area perfectly. */}
+    <section id="hero" className="min-h-[100svh] relative flex items-center justify-center bg-black overflow-hidden">
       <motion.div 
-        className="fixed -inset-[100px] z-[-1]"
+        className="absolute inset-0 z-0"
         style={{ y, scale }}
       >
         <motion.div 
@@ -51,7 +47,7 @@ export function Hero() {
             backgroundImage: bgImage ? `url("${bgImage}")` : undefined,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black" />
       </motion.div>
 
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
@@ -88,6 +84,7 @@ export function Hero() {
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5, duration: 1 }}
         className="absolute bottom-12 left-1/2 -translate-x-1/2 text-white/50 hover:text-white transition-colors flex flex-col items-center gap-2 group cursor-pointer z-20"
+        style={{ paddingBottom: 'max(0px, env(safe-area-inset-bottom))' }}
       >
         <span className="text-[10px] uppercase tracking-widest group-hover:tracking-[0.2em] transition-all duration-300">{t('Begin Ascent')}</span>
         <ArrowDown className="w-5 h-5 animate-bounce" />
