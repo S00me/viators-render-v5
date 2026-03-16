@@ -13,10 +13,20 @@
   }
 }
 
-html, body {
+html {
   background-color: black;
   color: white;
+}
+
+body {
+  background-color: black;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  min-height: 100vh;
+}
+
+#root {
   overflow-x: hidden;
+  width: 100%;
 }
 
 .leaflet-container {

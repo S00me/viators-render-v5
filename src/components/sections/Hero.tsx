@@ -6,9 +6,11 @@ import { Link } from 'react-router-dom';
 
 export function Hero() {
   const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 500], [0, 200]);
+  // Since the background is now fixed to the viewport, we move it UP (negative y) as the user scrolls down
+  // to create a parallax effect where the background scrolls slower than the foreground.
+  const y = useTransform(scrollY, [0, 500], [0, -150]);
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
-  const scale = useTransform(scrollY, [0, 500], [1, 1.1]);
+  const scale = useTransform(scrollY, [0, 500], [1, 1.05]);
   const [bgImage, setBgImage] = useState<string | null>(null);
   const { language, t } = useLanguage();
 
@@ -16,12 +18,12 @@ export function Hero() {
     fetch('/api/settings/hero_background')
       .then(res => res.json())
       .then(data => {
-        if (data.value) setBgImage(data.value);
-        // else setBgImage('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
+        if (data.value) {
+          setBgImage(data.value);
+        }
       })
       .catch((err) => {
         console.error(err);
-        // setBgImage('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
       });
   }, []);
 
@@ -33,9 +35,11 @@ export function Hero() {
   };
 
   return (
-    <section id="hero" className="min-h-[100svh] relative overflow-hidden flex items-center justify-center bg-black">
+    <section id="hero" className="min-h-[100svh] relative flex items-center justify-center bg-transparent">
+      {/* Fixed Background for Parallax and Safe Area Coverage. 
+          This avoids iOS Safari background-attachment bugs while covering the safe area perfectly. */}
       <motion.div 
-        className="absolute inset-0 z-0"
+        className="fixed -inset-[100px] z-[-1]"
         style={{ y, scale }}
       >
         <motion.div 
