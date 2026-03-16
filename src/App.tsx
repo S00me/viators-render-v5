@@ -10,6 +10,7 @@ import Home from '@/pages/Home';
 import Itinerary from '@/pages/Itinerary';
 import About from '@/pages/About';
 import Which from '@/pages/Which';
+import Test from '@/pages/Test';
 import { useEffect } from 'react';
 
 function ScrollToTopOnMount() {
@@ -34,7 +35,7 @@ function LanguageRedirect() {
     const hasPrompted = localStorage.getItem('languagePromptShown');
     const isHungarian = navigator.language.startsWith('hu');
     
-    if (isHungarian && !hasPrompted && location.pathname !== '/which') {
+    if (isHungarian && !hasPrompted && location.pathname !== '/which' && location.pathname !== '/test') {
       navigate('/which');
     }
   }, [navigate, location.pathname]);
@@ -89,6 +90,7 @@ function AppContent() {
       <LanguageRedirect />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/test" element={<Test />} />
         <Route path="/hu" element={<Home />} />
         <Route path="/itinerary" element={<Itinerary />} />
         <Route path="/itinerary/hu" element={<Itinerary />} />
