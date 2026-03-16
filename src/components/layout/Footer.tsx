@@ -27,7 +27,7 @@ export function Footer() {
   };
 
   return (
-    <footer id="community" className="bg-black text-white pt-8 border-t border-white/10 relative" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
+    <footer id="community" className="bg-black text-white py-8 border-t border-white/10 relative">
       <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row justify-between items-center md:items-end gap-8 md:gap-4">
         {/* Left Third */}
         <div className="flex flex-col items-center md:items-start space-y-4 text-center md:text-left md:w-1/3">

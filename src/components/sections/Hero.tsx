@@ -16,14 +16,39 @@ export function Hero() {
     fetch('/api/settings/hero_background')
       .then(res => res.json())
       .then(data => {
-        if (data.value) {
-          setBgImage(data.value);
-        }
+        if (data.value) setBgImage(data.value);
+        // else setBgImage('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
       })
       .catch((err) => {
         console.error(err);
+        // setBgImage('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');
       });
   }, []);
+
+  useEffect(() => {
+    if (bgImage) {
+      // Set body background to match hero section for iOS overscroll
+      const originalBg = document.body.style.backgroundImage;
+      const originalBgSize = document.body.style.backgroundSize;
+      const originalBgPos = document.body.style.backgroundPosition;
+      const originalBgRepeat = document.body.style.backgroundRepeat;
+      const originalBgAttachment = document.body.style.backgroundAttachment;
+
+      document.body.style.backgroundImage = `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.2), black), url('${bgImage}')`;
+      document.body.style.backgroundSize = 'cover';
+      document.body.style.backgroundPosition = 'center center';
+      document.body.style.backgroundRepeat = 'no-repeat';
+      document.body.style.backgroundAttachment = 'fixed';
+
+      return () => {
+        document.body.style.backgroundImage = originalBg;
+        document.body.style.backgroundSize = originalBgSize;
+        document.body.style.backgroundPosition = originalBgPos;
+        document.body.style.backgroundRepeat = originalBgRepeat;
+        document.body.style.backgroundAttachment = originalBgAttachment;
+      };
+    }
+  }, [bgImage]);
 
   const scrollToExpedition = () => {
     const element = document.getElementById('expedition');
@@ -33,7 +58,7 @@ export function Hero() {
   };
 
   return (
-    <section id="hero" className="min-h-[100svh] relative flex items-center justify-center bg-black overflow-hidden">
+    <section id="hero" className="h-screen relative overflow-hidden flex items-center justify-center bg-black">
       <motion.div 
         className="absolute inset-0 z-0"
         style={{ y, scale }}
@@ -47,7 +72,7 @@ export function Hero() {
             backgroundImage: bgImage ? `url("${bgImage}")` : undefined,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black" />
       </motion.div>
 
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
@@ -84,7 +109,6 @@ export function Hero() {
         animate={{ opacity: 1 }}
         transition={{ delay: 1.5, duration: 1 }}
         className="absolute bottom-12 left-1/2 -translate-x-1/2 text-white/50 hover:text-white transition-colors flex flex-col items-center gap-2 group cursor-pointer z-20"
-        style={{ paddingBottom: 'max(0px, env(safe-area-inset-bottom))' }}
       >
         <span className="text-[10px] uppercase tracking-widest group-hover:tracking-[0.2em] transition-all duration-300">{t('Begin Ascent')}</span>
         <ArrowDown className="w-5 h-5 animate-bounce" />
