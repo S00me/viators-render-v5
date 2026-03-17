@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { motion } from 'motion/react';
 
 export default function Test() {
   useEffect(() => {
@@ -43,27 +42,7 @@ export default function Test() {
   }, []);
 
   return (
-    <div className="relative min-h-[300dvh] w-full text-white flex flex-col overflow-hidden">
-      {/* Dynamic Background - GPU Accelerated Lines */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-100dvh] left-[-100vw] w-[300vw] h-[300dvh] origin-center -rotate-45">
-          <motion.div
-            animate={{
-              y: [0, 42],
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            className="w-full h-full"
-            style={{
-              background: 'repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.05) 40px, rgba(255,255,255,0.05) 42px)',
-            }}
-          />
-        </div>
-      </div>
-
+    <div className="relative min-h-[300dvh] w-full text-white flex flex-col">
       <main className="relative z-10 w-full px-8 flex-grow pt-[calc(env(safe-area-inset-top,40px)+6rem)] flex flex-col gap-16 pb-[calc(env(safe-area-inset-bottom,40px)+6rem)]">
         <div>
           <h1 className="text-5xl md:text-7xl font-black text-white/90 tracking-tight">
@@ -72,7 +51,7 @@ export default function Test() {
             LAB
           </h1>
           <p className="mt-6 text-white/80 max-w-sm text-lg font-medium">
-            The sticky header and footer are gone. The background stays dark gray. Scroll down to slide these panels into the notch area and see if they break the safe area.
+            The dynamic lines are gone. The background is a solid dark gray. Scroll down to slide these panels into the notch area and see if they break the safe area.
           </p>
         </div>
 
