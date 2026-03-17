@@ -1,7 +1,16 @@
 import { useEffect } from 'react';
+import { motion, useScroll, useTransform } from 'motion/react';
 
 export default function Test() {
+  const { scrollY } = useScroll();
+  
+  // Slide the glass panel up from 100% (below the header, hidden by overflow) 
+  // to 0% (fully covering the header) over the first 150px of scrolling.
+  const glassY = useTransform(scrollY, [0, 150], ['100%', '0%']);
+
   useEffect(() => {
+    const bgColor = '#fdfbff'; // White-ish purple-ish
+
     // 1. The theme-color Meta Tag
     let metaThemeColor = document.querySelector('meta[name="theme-color"]');
     const originalThemeColor = metaThemeColor?.getAttribute('content');
@@ -11,16 +20,16 @@ export default function Test() {
       metaThemeColor.setAttribute('name', 'theme-color');
       document.head.appendChild(metaThemeColor);
     }
-    metaThemeColor.setAttribute('content', '#1a1a1a'); // Dark gray
+    metaThemeColor.setAttribute('content', bgColor); 
 
     // 2. The "Nuclear" CSS for html, body, and #root
     const style = document.createElement('style');
     style.innerHTML = `
       html {
-          background-color: #1a1a1a !important;
+          background-color: ${bgColor} !important;
       }
       body {
-          background-color: #1a1a1a !important;
+          background-color: ${bgColor} !important;
           overscroll-behavior: none !important;
       }
       #root {
@@ -42,37 +51,55 @@ export default function Test() {
   }, []);
 
   return (
-    <div className="relative min-h-[300dvh] w-full text-white flex flex-col">
-      <main className="relative z-10 w-full px-8 flex-grow pt-[calc(env(safe-area-inset-top,40px)+6rem)] flex flex-col gap-16 pb-[calc(env(safe-area-inset-bottom,40px)+6rem)]">
-        <div>
-          <h1 className="text-5xl md:text-7xl font-black text-white/90 tracking-tight">
-            SAFE AREA
-            <br />
-            LAB
-          </h1>
-          <p className="mt-6 text-white/80 max-w-sm text-lg font-medium">
-            The dynamic lines are gone. The background is a solid dark gray. Scroll down to slide these panels into the notch area and see if they break the safe area.
-          </p>
-        </div>
-
-        {/* Test Panel 1: High Contrast Block */}
-        <div className="bg-white text-black p-8 rounded-3xl shadow-2xl relative z-20">
-          <h3 className="font-black text-2xl mb-2">High Contrast Panel</h3>
-          <p className="font-medium opacity-80">Sometimes pure white or bright elements scrolling near the notch can trigger Safari's contrast protection.</p>
-        </div>
-
-        {/* Test Panel 2: Glassmorphism */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-3xl relative z-20">
-          <h3 className="font-black text-2xl mb-2">Glassmorphism Panel</h3>
-          <p className="font-medium opacity-80">Heavy backdrop filters can sometimes cause rendering glitches near the safe areas on older iOS versions.</p>
-        </div>
+    <div className="relative w-full text-slate-900 flex flex-col">
+      
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-50 w-full overflow-hidden">
+        {/* The Glassy Panel that slides up */}
+        <motion.div 
+          style={{ y: glassY }}
+          className="absolute inset-0 bg-white/60 backdrop-blur-2xl border-b border-purple-900/10"
+        />
         
-        {/* Test Panel 3: Solid Color Block */}
-        <div className="bg-blue-600 p-8 rounded-3xl relative z-20">
-          <h3 className="font-black text-2xl mb-2">Solid Color Block</h3>
-          <p className="font-medium opacity-80">Just another block to create scrollable height and test intersection with the bottom home bar.</p>
+        {/* Header Content */}
+        <div className="relative z-10 px-8 pb-4 pt-[calc(env(safe-area-inset-top,40px)+16px)] flex items-center justify-between">
+          <span className="font-bold text-lg tracking-tight text-purple-950">Safe Area Header</span>
+          <span className="text-sm font-bold text-purple-900/40 uppercase tracking-widest">Scroll ↓</span>
         </div>
+      </header>
+
+      {/* Initial Screen (matches background) */}
+      <main className="relative z-10 w-full px-8 pt-12 pb-32 flex flex-col min-h-[100dvh]">
+        <h1 className="text-5xl md:text-7xl font-black text-purple-950 tracking-tight">
+          DYNAMIC
+          <br />
+          HEADER
+        </h1>
+        <p className="mt-6 text-purple-900/80 max-w-sm text-lg font-medium">
+          The background is a uniform white-ish purple. As you scroll down, the glassy panel will slide up into the header and safe area.
+        </p>
       </main>
+
+      {/* Different Colored Section (Panel) */}
+      <section className="relative z-20 w-full bg-purple-950 text-white px-8 py-24 rounded-t-[3rem] min-h-[150dvh] shadow-[0_-20px_50px_rgba(76,29,149,0.15)]">
+        <h2 className="text-4xl font-black mb-6">Dark Panel</h2>
+        <p className="text-purple-200 text-lg max-w-md">
+          When this panel scrolls up and goes under the header, you will be able to see it through the glassy effect that slid into place.
+        </p>
+        
+        <div className="mt-24 space-y-8">
+          <div className="h-48 bg-purple-900/50 rounded-3xl border border-purple-700/50 p-8 flex items-center justify-center">
+            <h3 className="font-bold text-2xl text-purple-300/50">Keep scrolling</h3>
+          </div>
+          <div className="h-48 bg-purple-900/50 rounded-3xl border border-purple-700/50 p-8 flex items-center justify-center">
+            <h3 className="font-bold text-2xl text-purple-300/50">Keep scrolling</h3>
+          </div>
+          <div className="h-48 bg-purple-900/50 rounded-3xl border border-purple-700/50 p-8 flex items-center justify-center">
+            <h3 className="font-bold text-2xl text-purple-300/50">Almost there</h3>
+          </div>
+        </div>
+      </section>
+      
     </div>
   );
 }
