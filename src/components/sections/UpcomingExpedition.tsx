@@ -85,8 +85,8 @@ export function UpcomingExpedition() {
       <div className="absolute inset-0 bg-gradient-to-b from-black via-black/90 to-transparent pointer-events-none z-10 h-96" />
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 to-transparent pointer-events-none z-10 mt-auto h-96" />
       
-      {/* Background Map - Removed expensive drop-shadow filter for scroll performance */}
-      <div className="absolute inset-0 z-0 opacity-65 pointer-events-none">
+      {/* Background Map */}
+      <div className="absolute inset-0 z-0 opacity-65 pointer-events-none" style={{ filter: 'drop-shadow(0 0 15px rgba(233, 213, 255, 0.5))' }}>
         <Map 
           route={route} 
           center={center} 
