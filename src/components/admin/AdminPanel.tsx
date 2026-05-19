@@ -34,7 +34,12 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
       const itineraryRes = await fetch('/api/itinerary');
       const itinerary = await itineraryRes.json();
-      setItineraryDays(itinerary);
+      setItineraryDays(itinerary.map((day: any) => ({
+        ...day,
+        water_source: !!day.water_source,
+        food_source: !!day.food_source,
+        store_source: !!day.store_source
+      })));
 
       const mapLayersRes = await fetch('/api/itinerary/map-layers');
       const layers = await mapLayersRes.json();
@@ -209,21 +214,26 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(day),
         });
+        if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
         if (data.success) {
           setItineraryDays(itineraryDays.map(d => d.id === day.id ? { ...d, id: data.id } : d));
           alert('Saved day');
         }
       } else {
-        await fetch(`/api/itinerary/${day.id}`, {
+        const res = await fetch(`/api/itinerary/${day.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(day),
         });
+        if (!res.ok) {
+           throw new Error(await res.text());
+        }
         alert('Updated day');
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to save day', e);
+      alert('Failed to save day: ' + e.message);
     }
   };
 
@@ -906,13 +916,13 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
                     <div className="flex items-center gap-4">
                       <label className="flex items-center gap-2 text-sm text-zinc-400">
-                        <input type="checkbox" checked={day.water_source} onChange={(e) => handleItineraryChange(day.id, 'water_source', e.target.checked)} /> Water
+                        <input type="checkbox" checked={!!day.water_source} onChange={(e) => handleItineraryChange(day.id, 'water_source', e.target.checked)} /> Water
                       </label>
                       <label className="flex items-center gap-2 text-sm text-zinc-400">
-                        <input type="checkbox" checked={day.food_source} onChange={(e) => handleItineraryChange(day.id, 'food_source', e.target.checked)} /> Food
+                        <input type="checkbox" checked={!!day.food_source} onChange={(e) => handleItineraryChange(day.id, 'food_source', e.target.checked)} /> Food
                       </label>
                       <label className="flex items-center gap-2 text-sm text-zinc-400">
-                        <input type="checkbox" checked={day.store_source} onChange={(e) => handleItineraryChange(day.id, 'store_source', e.target.checked)} /> Store
+                        <input type="checkbox" checked={!!day.store_source} onChange={(e) => handleItineraryChange(day.id, 'store_source', e.target.checked)} /> Store
                       </label>
                     </div>
 
