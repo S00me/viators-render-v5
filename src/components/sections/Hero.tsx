@@ -19,12 +19,12 @@ export function Hero() {
   };
 
   return (
-    <section id="hero" className="min-h-[100svh] relative flex items-center justify-center bg-[#111] overflow-hidden">
+    <section id="hero" className="min-h-[100svh] relative flex items-center justify-center bg-black overflow-hidden">
       <motion.div 
         className="absolute inset-0 z-0"
         style={{ y, scale }}
       >
-        <div className="absolute inset-0 bg-[#111]" />
+        <div className="absolute inset-0 bg-black" />
       </motion.div>
 
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto mb-16 md:mb-24">
