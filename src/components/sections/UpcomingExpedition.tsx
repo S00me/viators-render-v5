@@ -94,24 +94,6 @@ export function UpcomingExpedition() {
 
   return (
     <section id="expedition" className="py-24 bg-black text-white px-4 md:px-8 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-black via-black/90 to-transparent pointer-events-none z-10 h-96" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 to-transparent pointer-events-none z-10 mt-auto h-96" />
-      
-      {/* Background Map */}
-      <div className="absolute inset-0 z-0 opacity-65 pointer-events-none" style={{ filter: 'drop-shadow(0 0 15px rgba(233, 213, 255, 0.5))' }}>
-        <Map 
-          route={route} 
-          center={center} 
-          zoom={data.zoom} 
-          basemap="dark" 
-          interactive={false} 
-          fitBounds={true} 
-          lineColor="#b876ff" 
-          lineWeight={3}
-          className="w-full h-full scale-[1.5]"
-        />
-      </div>
-
       <div className="max-w-7xl mx-auto relative z-20">
         <div className="mb-12">
           <span className="text-purple-500 font-mono text-sm tracking-widest uppercase mb-2 block">{t('upcoming.title')}</span>
