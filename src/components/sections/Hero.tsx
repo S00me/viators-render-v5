@@ -8,9 +8,7 @@ import { parseTrack } from '@/lib/gpx';
 
 export function Hero() {
   const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 500], [0, 200]);
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
-  const scale = useTransform(scrollY, [0, 500], [1, 1.1]);
   const overlayOpacity = useTransform(scrollY, [0, 500], [0.55, 0.35]);
   const { language, t } = useLanguage();
   const navigate = useNavigate();
@@ -57,7 +55,6 @@ export function Hero() {
     <section id="hero" className="min-h-[100svh] relative flex items-center justify-center bg-black overflow-hidden">
       <motion.div 
         className="absolute inset-0 z-0"
-        style={{ y, scale }}
       >
         <div className="absolute inset-0 bg-black z-0" />
         
