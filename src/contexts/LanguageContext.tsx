@@ -91,6 +91,7 @@ const translations: Record<Language, Record<string, string>> = {
     'Store': 'Store',
     'Expedition Gear': 'Expedition Gear',
     'Route Key': 'Route Key',
+    'Unlock Map': 'Unlock Map',
   },
   hu: {
     'nav.home': 'Főoldal',
@@ -172,8 +173,9 @@ const translations: Record<Language, Record<string, string>> = {
     'None': 'Nincs',
     'Food Source': 'Étel elérhető',
     'Store': 'Bolt elérhető',
-    'Expedition Gear': 'Felszerelés',
+    'Expedition Gear': 'Expedition gear',
     'Route Key': 'Útvonal Jelmagyarázat',
+    'Unlock Map': 'Térkép feloldása',
   }
 };
 

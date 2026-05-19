@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Droplets, Utensils, Home, ExternalLink, CheckCircle, ShoppingCart, ChevronUp, X } from 'lucide-react';
+import { Droplets, Utensils, Home, ExternalLink, CheckCircle, ShoppingCart, ChevronUp, X, Lock, Unlock } from 'lucide-react';
 import Map from '@/components/map/Map';
 import { parseTrack } from '@/lib/gpx';
 import { Header } from '@/components/layout/Header';
@@ -161,6 +161,7 @@ export default function Itinerary() {
   const [upcomingTitle, setUpcomingTitle] = useState<string>('');
   const [upcomingTitleHu, setUpcomingTitleHu] = useState<string>('');
   const [isMobile, setIsMobile] = useState(false);
+  const [mapUnlocked, setMapUnlocked] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -276,7 +277,7 @@ export default function Itinerary() {
           </div>
 
           {/* Map Section */}
-          <div className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 h-[500px] relative shadow-2xl">
+          <div className="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 h-[500px] relative shadow-2xl group">
             <Map 
               routes={routes} 
               center={center} 
@@ -284,8 +285,32 @@ export default function Itinerary() {
               className="w-full h-full" 
               fitBounds={true}
               basemap="outdoors"
-              interactive={!isMobile}
+              interactive={!isMobile || mapUnlocked}
             />
+            
+            {/* Mobile Lock Overlay / Button */}
+            {isMobile && !mapUnlocked && (
+              <div 
+                className="absolute inset-0 z-[500] flex items-center justify-center bg-black/20 backdrop-blur-[1px]"
+                onClick={() => setMapUnlocked(true)}
+              >
+                <button className="bg-black/80 backdrop-blur-md border border-white/20 text-white px-6 py-3 rounded-full font-bold shadow-2xl flex items-center gap-2">
+                  <Lock size={18} />
+                  {t('Unlock Map')}
+                </button>
+              </div>
+            )}
+            
+            {/* Re-lock button if unlocked on mobile */}
+            {isMobile && mapUnlocked && (
+              <button 
+                onClick={() => setMapUnlocked(false)}
+                className="absolute top-4 right-4 z-[1000] bg-black/80 backdrop-blur-md border border-white/20 p-2 rounded-lg text-white shadow-lg"
+              >
+                <Unlock size={20} />
+              </button>
+            )}
+
             <RouteKey layers={mapLayers} />
           </div>
         </div>

@@ -84,6 +84,28 @@ function CustomZoomControl() {
   );
 }
 
+function MapInteractivityManager({ interactive }: { interactive: boolean }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (interactive) {
+      map.dragging.enable();
+      map.touchZoom.enable();
+      map.doubleClickZoom.enable();
+      map.boxZoom.enable();
+      map.keyboard.enable();
+    } else {
+      map.dragging.disable();
+      map.touchZoom.disable();
+      map.doubleClickZoom.disable();
+      map.boxZoom.disable();
+      map.keyboard.disable();
+    }
+  }, [interactive, map]);
+
+  return null;
+}
+
 export default function Map({ route, routes, center = [46.5775, 7.9052], zoom = 13, className, fitBounds = false, basemap = 'dark', lineColor = '#8B5CF6', lineWeight = 4, interactive = true }: MapProps) {
   
   const tileLayer = (basemap === 'outdoors' || basemap === 'topo-dark')
@@ -135,6 +157,7 @@ export default function Map({ route, routes, center = [46.5775, 7.9052], zoom = 
       ))}
 
       <MapUpdater center={center} zoom={zoom} route={route} routes={routes} fitBounds={fitBounds} />
+      <MapInteractivityManager interactive={interactive} />
       {interactive && <CustomZoomControl />}
     </MapContainer>
   );
