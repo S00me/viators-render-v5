@@ -79,7 +79,7 @@ export function Hero() {
         <motion.div className="absolute inset-0 bg-black z-20 pointer-events-none" style={{ opacity: overlayOpacity }} />
         
         {/* Deep top fade for header visibility */}
-        <div className="absolute inset-x-0 top-0 h-40 md:h-64 bg-gradient-to-b from-black via-black/90 to-transparent pointer-events-none z-20" />
+        <div className="absolute inset-x-0 top-0 h-40 md:h-24 lg:h-16 xl:bg-none bg-gradient-to-b from-black via-black/80 to-transparent pointer-events-none z-20" />
         
         {/* Vignette close to edges */}
         <div className="absolute inset-0 pointer-events-none z-20" style={{
