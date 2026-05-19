@@ -371,9 +371,9 @@ export default function Itinerary() {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 border-t border-white/5 pt-6">
+                      <div className="flex flex-col md:grid md:grid-cols-4 gap-4 border-t border-white/5 pt-6">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-zinc-800 rounded-lg text-zinc-400">
+                          <div className="p-2 bg-zinc-800 rounded-lg text-zinc-400 flex-shrink-0">
                             <Home size={18} />
                           </div>
                           <div>
@@ -381,8 +381,23 @@ export default function Itinerary() {
                             <span className="text-sm text-white">{getDayShelter(day)}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${day.water_source ? 'bg-blue-900/30 text-blue-400' : 'bg-red-900/30 text-red-400'}`}>
+
+                        {/* Mobile Icons */}
+                        <div className="flex md:hidden items-center gap-3 pl-11">
+                          <div className={`p-2 rounded-lg ${day.water_source ? 'bg-blue-900/30 text-blue-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                            <Droplets size={18} />
+                          </div>
+                          <div className={`p-2 rounded-lg ${day.food_source ? 'bg-green-900/30 text-green-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                            <Utensils size={18} />
+                          </div>
+                          <div className={`p-2 rounded-lg ${day.store_source ? 'bg-yellow-900/30 text-yellow-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                            <ShoppingCart size={18} />
+                          </div>
+                        </div>
+
+                        {/* Desktop specific amenities */}
+                        <div className="hidden md:flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${day.water_source ? 'bg-blue-900/30 text-blue-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
                             <Droplets size={18} />
                           </div>
                           <div>
@@ -390,8 +405,8 @@ export default function Itinerary() {
                             <span className="text-sm text-white">{day.water_source ? t('Available') : t('None')}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${day.food_source ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
+                        <div className="hidden md:flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${day.food_source ? 'bg-green-900/30 text-green-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
                             <Utensils size={18} />
                           </div>
                           <div>
@@ -399,8 +414,8 @@ export default function Itinerary() {
                             <span className="text-sm text-white">{day.food_source ? t('Available') : t('None')}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${day.store_source ? 'bg-yellow-900/30 text-yellow-400' : 'bg-red-900/30 text-red-400'}`}>
+                        <div className="hidden md:flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${day.store_source ? 'bg-yellow-900/30 text-yellow-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
                             <ShoppingCart size={18} />
                           </div>
                           <div>
