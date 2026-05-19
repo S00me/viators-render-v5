@@ -80,6 +80,18 @@ export function UpcomingExpedition() {
   const distance = language === 'hu' && data.distance_hu ? data.distance_hu : data.distance;
   const duration = language === 'hu' && data.duration_hu ? data.duration_hu : data.duration;
 
+  const renderTitle = (text: string) => {
+    const parts = text.split('-');
+    if (parts.length > 1) {
+      return (
+        <span className="font-bold">
+          {parts[0]}<span className="font-normal">- {parts.slice(1).join('-')}</span>
+        </span>
+      );
+    }
+    return <span className="font-bold">{text}</span>;
+  };
+
   return (
     <section id="expedition" className="py-24 bg-black text-white px-4 md:px-8 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-black via-black/90 to-transparent pointer-events-none z-10 h-96" />
@@ -103,8 +115,8 @@ export function UpcomingExpedition() {
       <div className="max-w-7xl mx-auto relative z-20">
         <div className="mb-12">
           <span className="text-purple-500 font-mono text-sm tracking-widest uppercase mb-2 block">{t('upcoming.title')}</span>
-          <h2 className="font-display text-4xl md:text-6xl font-bold tracking-tight leading-none">
-            {title}
+          <h2 className="font-display text-4xl md:text-6xl tracking-tight leading-none">
+            {renderTitle(title)}
           </h2>
         </div>
 

@@ -160,6 +160,14 @@ export default function Itinerary() {
   const [center, setCenter] = useState<[number, number]>([46.0000, 7.7300]);
   const [upcomingTitle, setUpcomingTitle] = useState<string>('');
   const [upcomingTitleHu, setUpcomingTitleHu] = useState<string>('');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -276,6 +284,7 @@ export default function Itinerary() {
               className="w-full h-full" 
               fitBounds={true}
               basemap="outdoors"
+              interactive={!isMobile}
             />
             <RouteKey layers={mapLayers} />
           </div>

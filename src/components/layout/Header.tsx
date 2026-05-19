@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { Menu, ArrowLeft, X } from 'lucide-react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HeaderProps {
@@ -15,6 +15,7 @@ export function Header({ isSubpage: propIsSubpage = false }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { language, setLanguage, t } = useLanguage();
+  const navigate = useNavigate();
   const isItineraryPage = location.pathname.includes('/itinerary');
   const isAboutPage = location.pathname.includes('/about');
   const isSubpage = isItineraryPage || isAboutPage || propIsSubpage;
@@ -53,7 +54,7 @@ export function Header({ isSubpage: propIsSubpage = false }: HeaderProps) {
     : isAboutPage
     ? []
     : [
-        { label: t('upcoming.title'), id: 'expedition' },
+        { label: t('upcoming.title'), action: 'navigate_itinerary' },
         { label: t('past.archive'), id: 'trips' },
         { label: t('nav.community'), id: 'community' }
       ];
@@ -112,7 +113,13 @@ export function Header({ isSubpage: propIsSubpage = false }: HeaderProps) {
             {menuItems.map((item) => (
               <button
                 key={item.label}
-                onClick={() => scrollToSection(item.id)}
+                onClick={() => {
+                  if (item.action === 'navigate_itinerary') {
+                    navigate(language === 'hu' ? '/hu/itinerary' : '/itinerary');
+                  } else if (item.id) {
+                    scrollToSection(item.id);
+                  }
+                }}
                 className="text-white/70 hover:text-white text-sm font-medium tracking-wide transition-colors uppercase"
               >
                 {item.label}
@@ -195,14 +202,16 @@ export function Header({ isSubpage: propIsSubpage = false }: HeaderProps) {
               <button
                 key={item.label}
                 onClick={() => {
-                    if (isItineraryPage && item.id === 'gear') {
+                    if (item.action === 'navigate_itinerary') {
+                        navigate(language === 'hu' ? '/hu/itinerary' : '/itinerary');
+                    } else if (isItineraryPage && item.id === 'gear') {
                         // Special handling for gear section in itinerary page if needed, 
                         // but scrollIntoView should work if id exists
                         const element = document.getElementById('gear');
                         if (element) element.scrollIntoView({ behavior: 'smooth' });
                     } else if (isItineraryPage && item.id === 'itinerary') {
                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                    } else {
+                    } else if (item.id) {
                         scrollToSection(item.id);
                     }
                     setIsMenuOpen(false);
