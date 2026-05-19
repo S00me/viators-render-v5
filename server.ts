@@ -222,28 +222,35 @@ app.post('/api/settings/:key', requireAdmin, (req, res) => {
 // Itinerary
 app.get('/api/itinerary', (req, res) => {
   const days = db.prepare('SELECT * FROM itinerary_days ORDER BY day_number ASC').all();
+  days.forEach((day: any) => {
+    try {
+      day.amenities = day.amenities ? JSON.parse(day.amenities) : [];
+    } catch {
+      day.amenities = [];
+    }
+  });
   res.json(days);
 });
 
 app.post('/api/itinerary', requireAdmin, (req, res) => {
-  const { day_number, title, description, km, elevation_gain, elevation_loss, shelter, water_source, food_source, store_source, difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu } = req.body;
+  const { day_number, title, description, km, elevation_gain, elevation_loss, shelter, amenities, difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu } = req.body;
   const stmt = db.prepare(`
-    INSERT INTO itinerary_days (day_number, title, description, km, elevation_gain, elevation_loss, shelter, water_source, food_source, store_source, difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO itinerary_days (day_number, title, description, km, elevation_gain, elevation_loss, shelter, amenities, difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  const info = stmt.run(day_number, title, description, km, elevation_gain, elevation_loss, shelter, water_source ? 1 : 0, food_source ? 1 : 0, store_source ? 1 : 0, difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu);
+  const info = stmt.run(day_number, title, description, km, elevation_gain, elevation_loss, shelter, JSON.stringify(amenities || []), difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu);
   res.json({ success: true, id: info.lastInsertRowid });
 });
 
 app.put('/api/itinerary/:id', requireAdmin, (req, res) => {
   const { id } = req.params;
-  const { day_number, title, description, km, elevation_gain, elevation_loss, shelter, water_source, food_source, store_source, difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu } = req.body;
+  const { day_number, title, description, km, elevation_gain, elevation_loss, shelter, amenities, difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu } = req.body;
   const stmt = db.prepare(`
     UPDATE itinerary_days 
-    SET day_number = ?, title = ?, description = ?, km = ?, elevation_gain = ?, elevation_loss = ?, shelter = ?, water_source = ?, food_source = ?, store_source = ?, difficulty = ?, komoot_link = ?, gpx_url = ?, color = ?, title_hu = ?, description_hu = ?, shelter_hu = ?, km_hu = ?, elevation_gain_hu = ?, elevation_loss_hu = ?, difficulty_hu = ?
+    SET day_number = ?, title = ?, description = ?, km = ?, elevation_gain = ?, elevation_loss = ?, shelter = ?, amenities = ?, difficulty = ?, komoot_link = ?, gpx_url = ?, color = ?, title_hu = ?, description_hu = ?, shelter_hu = ?, km_hu = ?, elevation_gain_hu = ?, elevation_loss_hu = ?, difficulty_hu = ?
     WHERE id = ?
   `);
-  stmt.run(day_number, title, description, km, elevation_gain, elevation_loss, shelter, water_source ? 1 : 0, food_source ? 1 : 0, store_source ? 1 : 0, difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu, id);
+  stmt.run(day_number, title, description, km, elevation_gain, elevation_loss, shelter, JSON.stringify(amenities || []), difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu, id);
   res.json({ success: true });
 });
 

@@ -34,12 +34,18 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
       const itineraryRes = await fetch('/api/itinerary');
       const itinerary = await itineraryRes.json();
-      setItineraryDays(itinerary.map((day: any) => ({
-        ...day,
-        water_source: !!day.water_source,
-        food_source: !!day.food_source,
-        store_source: !!day.store_source
-      })));
+      setItineraryDays(itinerary.map((day: any) => {
+        let parsedAmenities = [];
+        try {
+          parsedAmenities = typeof day.amenities === 'string' ? JSON.parse(day.amenities) : (day.amenities || []);
+        } catch (e) {
+          parsedAmenities = [];
+        }
+        return {
+          ...day,
+          amenities: parsedAmenities
+        };
+      }));
 
       const mapLayersRes = await fetch('/api/itinerary/map-layers');
       const layers = await mapLayersRes.json();
@@ -206,6 +212,18 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     setItineraryDays(itineraryDays.map(day => day.id === id ? { ...day, [field]: value } : day));
   };
 
+  const handleAmenityChange = (dayId: number, amenity: string, isChecked: boolean) => {
+    setItineraryDays(itineraryDays.map(day => {
+      if (day.id === dayId) {
+        const amSet = new Set(day.amenities || []);
+        if (isChecked) amSet.add(amenity);
+        else amSet.delete(amenity);
+        return { ...day, amenities: Array.from(amSet) };
+      }
+      return day;
+    }));
+  };
+
   const handleItinerarySave = async (day: any) => {
     try {
       if (day.id < 0) {
@@ -257,9 +275,7 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
       elevation_gain: '0m',
       elevation_loss: '0m',
       shelter: '',
-      water_source: false,
-      food_source: false,
-      store_source: false,
+      amenities: [],
       difficulty: 'Moderate',
       komoot_link: '',
       gpx_url: '',
@@ -916,13 +932,13 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
 
                     <div className="flex items-center gap-4">
                       <label className="flex items-center gap-2 text-sm text-zinc-400">
-                        <input type="checkbox" checked={!!day.water_source} onChange={(e) => handleItineraryChange(day.id, 'water_source', e.target.checked)} /> Water
+                        <input type="checkbox" checked={day.amenities?.includes('water') || false} onChange={(e) => handleAmenityChange(day.id, 'water', e.target.checked)} /> Water
                       </label>
                       <label className="flex items-center gap-2 text-sm text-zinc-400">
-                        <input type="checkbox" checked={!!day.food_source} onChange={(e) => handleItineraryChange(day.id, 'food_source', e.target.checked)} /> Food
+                        <input type="checkbox" checked={day.amenities?.includes('food') || false} onChange={(e) => handleAmenityChange(day.id, 'food', e.target.checked)} /> Food
                       </label>
                       <label className="flex items-center gap-2 text-sm text-zinc-400">
-                        <input type="checkbox" checked={!!day.store_source} onChange={(e) => handleItineraryChange(day.id, 'store_source', e.target.checked)} /> Store
+                        <input type="checkbox" checked={day.amenities?.includes('store') || false} onChange={(e) => handleAmenityChange(day.id, 'store', e.target.checked)} /> Store
                       </label>
                     </div>
 

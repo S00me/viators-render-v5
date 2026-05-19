@@ -23,9 +23,7 @@ interface ItineraryDay {
   elevation_loss_hu?: string;
   shelter: string;
   shelter_hu?: string;
-  water_source: boolean;
-  food_source: boolean;
-  store_source: boolean;
+  amenities: string[];
   difficulty: string;
   difficulty_hu?: string;
   komoot_link: string;
@@ -384,43 +382,43 @@ export default function Itinerary() {
 
                         {/* Mobile Icons */}
                         <div className="flex md:hidden items-center gap-3 pl-11">
-                          <div className={`p-2 rounded-lg ${day.water_source ? 'bg-blue-900/30 text-blue-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                          <div className={`p-2 rounded-lg ${day.amenities?.includes('water') ? 'bg-blue-900/30 text-blue-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
                             <Droplets size={18} />
                           </div>
-                          <div className={`p-2 rounded-lg ${day.food_source ? 'bg-green-900/30 text-green-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                          <div className={`p-2 rounded-lg ${day.amenities?.includes('food') ? 'bg-green-900/30 text-green-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
                             <Utensils size={18} />
                           </div>
-                          <div className={`p-2 rounded-lg ${day.store_source ? 'bg-yellow-900/30 text-yellow-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                          <div className={`p-2 rounded-lg ${day.amenities?.includes('store') ? 'bg-yellow-900/30 text-yellow-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
                             <ShoppingCart size={18} />
                           </div>
                         </div>
 
                         {/* Desktop specific amenities */}
                         <div className="hidden md:flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${day.water_source ? 'bg-blue-900/30 text-blue-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                          <div className={`p-2 rounded-lg ${day.amenities?.includes('water') ? 'bg-blue-900/30 text-blue-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
                             <Droplets size={18} />
                           </div>
                           <div>
                             <span className="text-xs text-zinc-500 block">{t('Water Source')}</span>
-                            <span className="text-sm text-white">{day.water_source ? t('Available') : t('None')}</span>
+                            <span className="text-sm text-white">{day.amenities?.includes('water') ? t('Available') : t('None')}</span>
                           </div>
                         </div>
                         <div className="hidden md:flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${day.food_source ? 'bg-green-900/30 text-green-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                          <div className={`p-2 rounded-lg ${day.amenities?.includes('food') ? 'bg-green-900/30 text-green-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
                             <Utensils size={18} />
                           </div>
                           <div>
                             <span className="text-xs text-zinc-500 block">{t('Food Source')}</span>
-                            <span className="text-sm text-white">{day.food_source ? t('Available') : t('None')}</span>
+                            <span className="text-sm text-white">{day.amenities?.includes('food') ? t('Available') : t('None')}</span>
                           </div>
                         </div>
                         <div className="hidden md:flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${day.store_source ? 'bg-yellow-900/30 text-yellow-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                          <div className={`p-2 rounded-lg ${day.amenities?.includes('store') ? 'bg-yellow-900/30 text-yellow-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
                             <ShoppingCart size={18} />
                           </div>
                           <div>
                             <span className="text-xs text-zinc-500 block">{t('Store')}</span>
-                            <span className="text-sm text-white">{day.store_source ? t('Available') : t('None')}</span>
+                            <span className="text-sm text-white">{day.amenities?.includes('store') ? t('Available') : t('None')}</span>
                           </div>
                         </div>
                       </div>
