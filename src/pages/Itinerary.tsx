@@ -602,7 +602,7 @@ export default function Itinerary() {
         </section>
 
         {/* Gear List */}
-        <section className="bg-[#050505] py-24 px-4 md:px-8 border-t border-white/5" id="gear">
+        <section className="bg-[#0c0c0c] py-24 px-4 md:px-8 border-t border-white/5" id="gear">
           <div className="max-w-7xl mx-auto">
             <h2 className="font-display text-3xl font-bold text-white mb-16 border-b border-white/10 pb-4 text-center uppercase tracking-widest">{t('Expedition Gear')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
