@@ -159,9 +159,14 @@ function GearItem({ item, parentChecked, color = '#A855F7', isSubItem = false }:
         {hasChildren && (
           <button 
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setFolded(!folded); }} 
-            className="text-zinc-500 hover:text-white transition-colors ml-2 font-mono text-xs cursor-pointer"
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/20 border transition-all ml-2 cursor-pointer font-mono text-[10px] outline-none ${folded ? 'border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/20' : 'border-white/20 text-white bg-white/5'}`}
           >
-            {folded ? (childCount > 0 ? `+ (${childCount})` : '+') : '-'}
+            {item.notes && item.notes.length > 0 && (
+              <span className="opacity-80" style={{ color: color }}>//</span>
+            )}
+            <span className="font-bold text-xs leading-none">
+              {folded ? (childCount > 0 ? `+${childCount}` : '+') : '-'}
+            </span>
           </button>
         )}
       </li>
