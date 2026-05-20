@@ -112,7 +112,7 @@ function GearCategoryCard({ category, language }: { category: GearCategory; lang
       >
         <h3 className="font-bold text-white flex items-center gap-2 select-none">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-          {title} <span className="text-zinc-500 text-sm font-normal">({itemCount})</span>
+          {title} <span className="text-zinc-500 text-base md:text-sm font-normal">({itemCount})</span>
         </h3>
         <motion.div 
           animate={{ rotate: folded ? 0 : 45 }}
@@ -146,7 +146,7 @@ function GearCategoryCard({ category, language }: { category: GearCategory; lang
           >
             <div 
               onClick={(e) => { e.stopPropagation(); setFolded(false); }}
-              className="text-[11px] font-bold font-mono text-white bg-zinc-800/90 hover:bg-zinc-700 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 cursor-pointer shadow-[0_0_10px_rgba(0,0,0,0.5)] transition-colors transition-transform hover:scale-105 select-none"
+              className="text-xs md:text-[11px] font-bold font-mono text-white bg-zinc-800/90 hover:bg-zinc-700 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 cursor-pointer shadow-[0_0_10px_rgba(0,0,0,0.5)] transition-colors transition-transform hover:scale-105 select-none"
             >
               + {hiddenCount} {language === 'hu' ? 'további elem' : 'more items'}
             </div>
@@ -175,7 +175,7 @@ function GearItem({ item, parentChecked, color = '#A855F7', isSubItem = false }:
   return (
     <div className="flex flex-col gap-2">
       <li 
-        className={`flex items-center gap-3 group w-fit ${isSubItem ? 'text-xs' : 'text-sm'}`}
+        className={`flex items-center gap-3 group w-fit ${isSubItem ? 'text-sm md:text-xs' : 'text-base md:text-sm'}`}
       >
         <div 
           className="flex items-center gap-3 cursor-pointer"
@@ -207,12 +207,12 @@ function GearItem({ item, parentChecked, color = '#A855F7', isSubItem = false }:
         {hasChildren && (
           <button 
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setFolded(!folded); }} 
-            className={`flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/20 border transition-all ml-2 cursor-pointer font-mono text-[10px] outline-none ${folded ? 'border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/20' : 'border-white/20 text-white bg-white/5'}`}
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/20 border transition-all ml-2 cursor-pointer font-mono text-[11px] md:text-[10px] outline-none ${folded ? 'border-white/10 text-zinc-400 hover:text-white hover:bg-white/10 hover:border-white/20' : 'border-white/20 text-white bg-white/5'}`}
           >
             {item.notes && item.notes.length > 0 && (
               <span className="opacity-80" style={{ color: color }}>//</span>
             )}
-            <span className="font-bold text-xs leading-none">
+            <span className="font-bold text-sm md:text-xs leading-none">
               {folded ? (childCount > 0 ? `+${childCount}` : '+') : '-'}
             </span>
           </button>
@@ -234,8 +234,8 @@ function GearItem({ item, parentChecked, color = '#A855F7', isSubItem = false }:
           {item.notes?.map(note => {
             const noteName = language === 'hu' && note.name_hu ? note.name_hu : note.name;
             return (
-              <div key={note.id} className="flex items-start gap-2 text-xs w-fit" style={{ color: color, filter: 'brightness(0.65)' }}>
-                <span className="font-mono text-[10px] opacity-70 shrink-0 mt-0.5">//</span>
+              <div key={note.id} className="flex items-start gap-2 text-sm md:text-xs w-fit" style={{ color: color, filter: 'brightness(0.65)' }}>
+                <span className="font-mono text-xs md:text-[10px] opacity-70 shrink-0 mt-0.5">//</span>
                 <span className="opacity-90">
                   {noteName}
                 </span>
