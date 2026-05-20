@@ -321,14 +321,14 @@ function RouteKey({ layers }: { layers: MapLayer[] }) {
 
 function ExpandableDescription({ text, language }: { text: string; language: string }) {
   const [expanded, setExpanded] = useState(false);
-  const isLong = text.length > 200;
+  const isLong = text.length > 120;
   
   if (!isLong) return <p className="text-zinc-400 leading-relaxed mb-6 whitespace-pre-wrap">{text}</p>;
   
   return (
     <div className="mb-6">
       <p className="text-zinc-400 leading-relaxed whitespace-pre-wrap">
-        {expanded ? text : `${text.slice(0, 180)}...`}
+        {expanded ? text : `${text.slice(0, 100)}...`}
       </p>
       <button 
         onClick={() => setExpanded(!expanded)} 
@@ -338,6 +338,29 @@ function ExpandableDescription({ text, language }: { text: string; language: str
       </button>
     </div>
   );
+}
+
+function MobileAmenityIcon({ active, activeNode, inactiveNode, label }: { active: boolean, activeNode: React.ReactNode, inactiveNode: React.ReactNode, label: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="flex flex-col items-center gap-1 cursor-pointer w-20" onClick={() => setOpen(!open)}>
+      <div className={`p-2.5 rounded-lg transition-colors ${active ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+         {active ? activeNode : inactiveNode}
+      </div>
+      <AnimatePresence>
+        {open && (
+           <motion.div 
+             initial={{ opacity: 0, height: 0 }} 
+             animate={{ opacity: 1, height: 'auto' }} 
+             exit={{ opacity: 0, height: 0 }} 
+             className="text-[10px] text-zinc-400 text-center uppercase tracking-wider overflow-hidden mt-1"
+           >
+              {label}
+           </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
 }
 
 export default function Itinerary() {
@@ -443,6 +466,11 @@ export default function Itinerary() {
     return day.difficulty;
   };
 
+  const isRestDay = (day: ItineraryDay) => {
+    const km = String(getDayKm(day) || '').trim().toLowerCase();
+    return km === '0' || km === '0 km' || km === '0km' || km === '';
+  };
+
   const displayUpcomingTitle = language === 'hu' && upcomingTitleHu ? upcomingTitleHu : upcomingTitle;
 
   return (
@@ -473,7 +501,7 @@ export default function Itinerary() {
               zoom={12} 
               className="w-full h-full" 
               fitBounds={true}
-              fitBoundsPadding={isMobile ? [10, 10] : [50, 50]}
+              fitBoundsPadding={isMobile ? [0, 0] : [50, 50]}
               basemap="outdoors"
               interactive={!isMobile || mapUnlocked}
             />
@@ -516,7 +544,7 @@ export default function Itinerary() {
                   key={day.id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "50px" }}
+                  viewport={{ once: true, margin: "150px" }}
                   transition={{ delay: index * 0.1 }}
                   className="grid grid-cols-1 lg:grid-cols-3 gap-8"
                 >
@@ -540,26 +568,28 @@ export default function Itinerary() {
                   
                   <div className="lg:col-span-2">
                     <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 md:p-8">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-                        <div className="order-1 md:order-1">
-                          <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Distance')}</span>
-                          <span className="text-xl font-mono font-bold text-white">{getDayKm(day)}</span>
+                      {!isRestDay(day) && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                          <div className="order-1 md:order-1">
+                            <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Distance')}</span>
+                            <span className="text-xl font-mono font-bold text-white">{getDayKm(day)}</span>
+                          </div>
+                          <div className="order-3 md:order-2">
+                            <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Gain')}</span>
+                            <span className="text-xl font-mono font-bold text-green-400">+{getDayElevationGain(day)}</span>
+                          </div>
+                          <div className="order-4 md:order-3">
+                            <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Loss')}</span>
+                            <span className="text-xl font-mono font-bold text-red-400">-{getDayElevationLoss(day)}</span>
+                          </div>
+                          <div className="order-2 md:order-4">
+                            <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Difficulty')}</span>
+                            <span className="text-xl font-mono font-bold text-white">{getDayDifficulty(day)}</span>
+                          </div>
                         </div>
-                        <div className="order-3 md:order-2">
-                          <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Gain')}</span>
-                          <span className="text-xl font-mono font-bold text-green-400">+{getDayElevationGain(day)}</span>
-                        </div>
-                        <div className="order-4 md:order-3">
-                          <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Loss')}</span>
-                          <span className="text-xl font-mono font-bold text-red-400">-{getDayElevationLoss(day)}</span>
-                        </div>
-                        <div className="order-2 md:order-4">
-                          <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Difficulty')}</span>
-                          <span className="text-xl font-mono font-bold text-white">{getDayDifficulty(day)}</span>
-                        </div>
-                      </div>
+                      )}
                       
-                      <div className="flex flex-col md:grid md:grid-cols-4 gap-4 border-t border-white/5 pt-6">
+                      <div className={`flex flex-col md:grid md:grid-cols-4 gap-4 ${!isRestDay(day) ? 'border-t border-white/5 pt-6' : ''}`}>
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-zinc-800 rounded-lg text-zinc-400 flex-shrink-0">
                             <Home size={18} />
@@ -570,47 +600,60 @@ export default function Itinerary() {
                           </div>
                         </div>
 
-                        {/* Mobile Icons */}
-                        <div className="flex md:hidden items-center gap-4 border-t border-white/5 pt-4 mt-2">
-                          <div className={`p-2.5 rounded-lg ${day.amenities?.includes('water') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
-                            <Droplets size={22} />
-                          </div>
-                          <div className={`p-2.5 rounded-lg ${day.amenities?.includes('food') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
-                            <Utensils size={22} />
-                          </div>
-                          <div className={`p-2.5 rounded-lg ${day.amenities?.includes('store') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
-                            <ShoppingCart size={22} />
-                          </div>
-                        </div>
+                        {!isRestDay(day) && (
+                          <>
+                            {/* Mobile Icons */}
+                            <div className="flex md:hidden items-start justify-between gap-2 border-t border-white/5 pt-4 mt-2">
+                              <MobileAmenityIcon 
+                                active={!!day.amenities?.includes('water')} 
+                                activeNode={<Droplets size={18} />} 
+                                inactiveNode={<Droplets size={18} />} 
+                                label={t('Water Source')} 
+                              />
+                              <MobileAmenityIcon 
+                                active={!!day.amenities?.includes('food')} 
+                                activeNode={<Utensils size={18} />} 
+                                inactiveNode={<Utensils size={18} />} 
+                                label={t('Food Source')} 
+                              />
+                              <MobileAmenityIcon 
+                                active={!!day.amenities?.includes('store')} 
+                                activeNode={<ShoppingCart size={18} />} 
+                                inactiveNode={<ShoppingCart size={18} />} 
+                                label={t('Store')} 
+                              />
+                            </div>
 
-                        {/* Desktop specific amenities */}
-                        <div className="hidden md:flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${day.amenities?.includes('water') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
-                            <Droplets size={18} />
-                          </div>
-                          <div>
-                            <span className="text-xs text-zinc-500 block">{t('Water Source')}</span>
-                            <span className="text-sm text-white">{day.amenities?.includes('water') ? t('Available') : t('None')}</span>
-                          </div>
-                        </div>
-                        <div className="hidden md:flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${day.amenities?.includes('food') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
-                            <Utensils size={18} />
-                          </div>
-                          <div>
-                            <span className="text-xs text-zinc-500 block">{t('Food Source')}</span>
-                            <span className="text-sm text-white">{day.amenities?.includes('food') ? t('Available') : t('None')}</span>
-                          </div>
-                        </div>
-                        <div className="hidden md:flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${day.amenities?.includes('store') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
-                            <ShoppingCart size={18} />
-                          </div>
-                          <div>
-                            <span className="text-xs text-zinc-500 block">{t('Store')}</span>
-                            <span className="text-sm text-white">{day.amenities?.includes('store') ? t('Available') : t('None')}</span>
-                          </div>
-                        </div>
+                            {/* Desktop specific amenities */}
+                            <div className="hidden md:flex items-center gap-3">
+                              <div className={`p-2 rounded-lg ${day.amenities?.includes('water') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                                <Droplets size={18} />
+                              </div>
+                              <div>
+                                <span className="text-xs text-zinc-500 block">{t('Water Source')}</span>
+                                <span className="text-sm text-white">{day.amenities?.includes('water') ? t('Available') : t('None')}</span>
+                              </div>
+                            </div>
+                            <div className="hidden md:flex items-center gap-3">
+                              <div className={`p-2 rounded-lg ${day.amenities?.includes('food') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                                <Utensils size={18} />
+                              </div>
+                              <div>
+                                <span className="text-xs text-zinc-500 block">{t('Food Source')}</span>
+                                <span className="text-sm text-white">{day.amenities?.includes('food') ? t('Available') : t('None')}</span>
+                              </div>
+                            </div>
+                            <div className="hidden md:flex items-center gap-3">
+                              <div className={`p-2 rounded-lg ${day.amenities?.includes('store') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                                <ShoppingCart size={18} />
+                              </div>
+                              <div>
+                                <span className="text-xs text-zinc-500 block">{t('Store')}</span>
+                                <span className="text-sm text-white">{day.amenities?.includes('store') ? t('Available') : t('None')}</span>
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
