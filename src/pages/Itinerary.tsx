@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Droplets, Utensils, Home, ExternalLink, CheckCircle, ShoppingCart, ChevronUp, X, Lock, Unlock, Plus } from 'lucide-react';
 import Map from '@/components/map/Map';
@@ -68,13 +68,46 @@ function GearCategoryCard({ category, language }: { category: GearCategory; lang
   const isLightRed = color.toLowerCase() === '#fca5a5' || color.toLowerCase() === 'red' || color.toLowerCase() === '#ef4444';
   
   const itemCount = category.items.length;
+  const listRef = useRef<HTMLUListElement>(null);
+  const [hiddenCount, setHiddenCount] = useState(0);
+
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (!listRef.current || !folded) {
+        setHiddenCount(0);
+        return;
+      }
+      const list = listRef.current;
+      const containerHeight = list.parentElement?.clientHeight || 0;
+      
+      let hidden = 0;
+      if (containerHeight > 40) {
+        Array.from(list.children).forEach((child) => {
+          const el = child as HTMLElement;
+          if (el.offsetTop + el.offsetHeight > containerHeight - 20) { 
+            hidden++;
+          }
+        });
+      }
+      setHiddenCount(hidden);
+    };
+
+    checkOverflow();
+    const observer = new ResizeObserver(checkOverflow);
+    if (listRef.current?.parentElement) {
+      observer.observe(listRef.current.parentElement);
+    }
+    return () => observer.disconnect();
+  }, [folded, category.items.length]);
 
   return (
-    <div 
+    <motion.div 
+       layout
        className={`border border-white/10 rounded-2xl transition-colors overflow-hidden flex flex-col group/card ${isLightRed ? 'bg-red-950/20 hover:bg-red-950/40' : 'bg-zinc-900/30 hover:bg-zinc-900/50'}`}
     >
-      <div 
-        className="flex justify-between items-center cursor-pointer p-6"
+      <motion.div 
+        layout="position"
+        className="flex justify-between items-center cursor-pointer p-6 z-10 relative bg-inherit"
         onClick={() => setFolded(!folded)}
       >
         <h3 className="font-bold text-white flex items-center gap-2 select-none">
@@ -87,25 +120,40 @@ function GearCategoryCard({ category, language }: { category: GearCategory; lang
         >
           <Plus size={16} />
         </motion.div>
-      </div>
+      </motion.div>
       
-      <AnimatePresence>
-      {!folded && (
+      <div className="relative flex-1 min-h-0 flex flex-col">
         <motion.div 
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: "auto", opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          className="overflow-hidden"
+          layout="position"
+          className={folded ? "absolute inset-0 overflow-hidden" : "overflow-hidden"}
+          style={{
+             maskImage: folded && hiddenCount > 0 ? 'linear-gradient(to bottom, black 60%, transparent 100%)' : 'none',
+             WebkitMaskImage: folded && hiddenCount > 0 ? 'linear-gradient(to bottom, black 60%, transparent 100%)' : 'none',
+          }}
         >
-          <ul className="space-y-3 px-6 pb-6">
+          <ul ref={listRef} className="space-y-3 px-6 pb-6 pt-2 h-auto">
             {category.items.map((item) => (
               <GearItem key={item.id} item={item} color={color} />
             ))}
           </ul>
         </motion.div>
-      )}
-      </AnimatePresence>
-    </div>
+
+        {folded && hiddenCount > 0 && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute bottom-4 left-0 right-0 flex items-end justify-center z-10"
+          >
+            <div 
+              onClick={(e) => { e.stopPropagation(); setFolded(false); }}
+              className="text-[11px] font-bold font-mono text-white bg-zinc-800/90 hover:bg-zinc-700 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 cursor-pointer shadow-[0_0_10px_rgba(0,0,0,0.5)] transition-colors transition-transform hover:scale-105 select-none"
+            >
+              + {hiddenCount} {language === 'hu' ? 'további elem' : 'more items'}
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </motion.div>
   );
 }
 

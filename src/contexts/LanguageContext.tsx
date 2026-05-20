@@ -173,7 +173,7 @@ const translations: Record<Language, Record<string, string>> = {
     'None': 'Nincs',
     'Food Source': 'Étel elérhető',
     'Store': 'Bolt elérhető',
-    'Expedition Gear': 'Expedition gear',
+    'Expedition Gear': 'Felszerelés',
     'Route Key': 'Útvonal Jelmagyarázat',
     'Unlock Map': 'Térkép feloldása',
   }
