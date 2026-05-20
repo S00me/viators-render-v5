@@ -319,6 +319,27 @@ function RouteKey({ layers }: { layers: MapLayer[] }) {
   );
 }
 
+function ExpandableDescription({ text, language }: { text: string; language: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = text.length > 200;
+  
+  if (!isLong) return <p className="text-zinc-400 leading-relaxed mb-6 whitespace-pre-wrap">{text}</p>;
+  
+  return (
+    <div className="mb-6">
+      <p className="text-zinc-400 leading-relaxed whitespace-pre-wrap">
+        {expanded ? text : `${text.slice(0, 180)}...`}
+      </p>
+      <button 
+        onClick={() => setExpanded(!expanded)} 
+        className="text-xs font-bold uppercase tracking-wider text-purple-400 hover:text-purple-300 mt-2 transition-colors"
+      >
+        {expanded ? (language === 'hu' ? 'Kevesebb mutatása' : 'Show less') : (language === 'hu' ? 'Több mutatása' : 'Read more')}
+      </button>
+    </div>
+  );
+}
+
 export default function Itinerary() {
   const { language, t } = useLanguage();
   const [days, setDays] = useState<ItineraryDay[]>([]);
@@ -495,7 +516,7 @@ export default function Itinerary() {
                   key={day.id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
+                  viewport={{ once: true, margin: "50px" }}
                   transition={{ delay: index * 0.1 }}
                   className="grid grid-cols-1 lg:grid-cols-3 gap-8"
                 >
@@ -503,9 +524,7 @@ export default function Itinerary() {
                     <div className="sticky top-24">
                       <span className="text-purple-500 font-mono text-xl font-bold block mb-2">{t('DAY')} {day.day_number}</span>
                       <h3 className="text-2xl font-bold text-white mb-4">{getDayTitle(day)}</h3>
-                      <p className="text-zinc-400 leading-relaxed mb-6">
-                        {getDayDescription(day)}
-                      </p>
+                      <ExpandableDescription text={getDayDescription(day)} language={language} />
                       {day.komoot_link && (
                         <a 
                           href={day.komoot_link} 
@@ -522,19 +541,19 @@ export default function Itinerary() {
                   <div className="lg:col-span-2">
                     <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 md:p-8">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-                        <div>
+                        <div className="order-1 md:order-1">
                           <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Distance')}</span>
                           <span className="text-xl font-mono font-bold text-white">{getDayKm(day)}</span>
                         </div>
-                        <div>
+                        <div className="order-3 md:order-2">
                           <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Gain')}</span>
                           <span className="text-xl font-mono font-bold text-green-400">+{getDayElevationGain(day)}</span>
                         </div>
-                        <div>
+                        <div className="order-4 md:order-3">
                           <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Loss')}</span>
                           <span className="text-xl font-mono font-bold text-red-400">-{getDayElevationLoss(day)}</span>
                         </div>
-                        <div>
+                        <div className="order-2 md:order-4">
                           <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Difficulty')}</span>
                           <span className="text-xl font-mono font-bold text-white">{getDayDifficulty(day)}</span>
                         </div>
@@ -552,21 +571,21 @@ export default function Itinerary() {
                         </div>
 
                         {/* Mobile Icons */}
-                        <div className="flex md:hidden items-center gap-3 pl-11">
-                          <div className={`p-2 rounded-lg ${day.amenities?.includes('water') ? 'bg-blue-900/30 text-blue-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
-                            <Droplets size={18} />
+                        <div className="flex md:hidden items-center gap-4 border-t border-white/5 pt-4 mt-2">
+                          <div className={`p-2.5 rounded-lg ${day.amenities?.includes('water') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                            <Droplets size={22} />
                           </div>
-                          <div className={`p-2 rounded-lg ${day.amenities?.includes('food') ? 'bg-green-900/30 text-green-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
-                            <Utensils size={18} />
+                          <div className={`p-2.5 rounded-lg ${day.amenities?.includes('food') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                            <Utensils size={22} />
                           </div>
-                          <div className={`p-2 rounded-lg ${day.amenities?.includes('store') ? 'bg-yellow-900/30 text-yellow-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
-                            <ShoppingCart size={18} />
+                          <div className={`p-2.5 rounded-lg ${day.amenities?.includes('store') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                            <ShoppingCart size={22} />
                           </div>
                         </div>
 
                         {/* Desktop specific amenities */}
                         <div className="hidden md:flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${day.amenities?.includes('water') ? 'bg-blue-900/30 text-blue-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                          <div className={`p-2 rounded-lg ${day.amenities?.includes('water') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
                             <Droplets size={18} />
                           </div>
                           <div>
@@ -575,7 +594,7 @@ export default function Itinerary() {
                           </div>
                         </div>
                         <div className="hidden md:flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${day.amenities?.includes('food') ? 'bg-green-900/30 text-green-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                          <div className={`p-2 rounded-lg ${day.amenities?.includes('food') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
                             <Utensils size={18} />
                           </div>
                           <div>
@@ -584,7 +603,7 @@ export default function Itinerary() {
                           </div>
                         </div>
                         <div className="hidden md:flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${day.amenities?.includes('store') ? 'bg-orange-900/30 text-orange-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                          <div className={`p-2 rounded-lg ${day.amenities?.includes('store') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
                             <ShoppingCart size={18} />
                           </div>
                           <div>
