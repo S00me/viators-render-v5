@@ -39,43 +39,127 @@ interface MapLayer {
   files: { id: number; file_url: string }[];
 }
 
+interface GearItemData {
+  id: number;
+  name: string;
+  name_hu?: string;
+  sub_items?: GearItemData[];
+  notes?: GearItemData[];
+}
+
 interface GearCategory {
   id: number;
   name: string;
   name_hu?: string;
-  items: { id: number; name: string; name_hu?: string }[];
+  items: GearItemData[];
 }
 
 interface GearItemProps {
-  item: { id: number; name: string; name_hu?: string };
+  item: GearItemData;
 }
 
-function GearItem({ item }: GearItemProps) {
-  const [checked, setChecked] = useState(false);
-  const { language } = useLanguage();
-
-  const itemName = language === 'hu' && item.name_hu ? item.name_hu : item.name;
+function GearCategoryCard({ category, language }: { category: GearCategory; language: string }) {
+  const [folded, setFolded] = useState(true);
+  const title = language === 'hu' && category.name_hu ? category.name_hu : category.name;
+  
+  const itemCount = category.items.length;
 
   return (
-    <li 
-      className="flex items-start gap-3 text-sm cursor-pointer group"
-      onClick={() => setChecked(!checked)}
-    >
-      <div className={`mt-0.5 w-4 h-4 rounded-full border transition-all duration-300 flex items-center justify-center shrink-0 ${checked ? 'bg-purple-500 border-purple-500' : 'border-zinc-600 group-hover:border-purple-400'}`}>
-        {checked && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          >
-            <CheckCircle size={10} className="text-white" />
-          </motion.div>
-        )}
+    <div className="bg-zinc-900/30 border border-white/10 rounded-2xl p-6 hover:bg-zinc-900/50 transition-colors">
+      <div 
+        className="flex justify-between items-center cursor-pointer"
+        onClick={() => setFolded(!folded)}
+      >
+        <h3 className="font-bold text-white flex items-center gap-2">
+          <div className="w-2 h-2 bg-purple-500 rounded-full" />
+          {title} <span className="text-zinc-500 text-sm font-normal">({itemCount})</span>
+        </h3>
+        <button className="text-zinc-500 hover:text-white transition-colors">
+          {folded ? '+' : '-'}
+        </button>
       </div>
-      <span className={`transition-colors duration-300 ${checked ? 'text-zinc-500 line-through' : 'text-zinc-300 group-hover:text-white'}`}>
-        {itemName}
-      </span>
-    </li>
+      
+      {!folded && (
+        <ul className="space-y-3 mt-4">
+          {category.items.map((item) => (
+            <GearItem key={item.id} item={item} />
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function GearItem({ item, parentChecked }: GearItemProps & { parentChecked?: boolean }) {
+  const [checked, setChecked] = useState(false);
+  const [folded, setFolded] = useState(true);
+  const { language } = useLanguage();
+
+  useEffect(() => {
+    if (parentChecked !== undefined) {
+      setChecked(parentChecked);
+    }
+  }, [parentChecked]);
+
+  const itemName = language === 'hu' && item.name_hu ? item.name_hu : item.name;
+  const hasChildren = (item.sub_items && item.sub_items.length > 0) || (item.notes && item.notes.length > 0);
+  const childCount = (item.sub_items?.length || 0) + (item.notes?.length || 0);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <li 
+        className="flex items-center gap-3 text-sm group w-fit"
+      >
+        <div 
+          className="flex items-center gap-3 cursor-pointer"
+          onClick={() => setChecked(!checked)}
+        >
+          <div className={`mt-0.5 w-4 h-4 rounded-full border transition-all duration-300 flex items-center justify-center shrink-0 ${checked ? 'bg-purple-500 border-purple-500' : 'border-zinc-600 group-hover:border-purple-400'}`}>
+            {checked && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              >
+                <CheckCircle size={10} className="text-white" />
+              </motion.div>
+            )}
+          </div>
+          <span className={`transition-colors duration-300 ${checked ? 'text-zinc-500 line-through' : 'text-zinc-300 group-hover:text-white'}`}>
+            {itemName}
+          </span>
+        </div>
+        
+        {hasChildren && (
+          <button 
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setFolded(!folded); }} 
+            className="text-zinc-500 hover:text-white transition-colors ml-2 font-mono text-xs cursor-pointer"
+          >
+            {folded ? `+ (${childCount})` : '-'}
+          </button>
+        )}
+      </li>
+      
+      {/* Sub-items and notes */}
+      {hasChildren && !folded && (
+        <div className="pl-7 space-y-2">
+          {item.sub_items?.map(sub => (
+            <GearItem key={sub.id} item={sub} parentChecked={checked} />
+          ))}
+          {item.notes?.map(note => {
+            const noteName = language === 'hu' && note.name_hu ? note.name_hu : note.name;
+            return (
+              <div key={note.id} className="flex items-start gap-2 text-sm text-zinc-500 w-fit">
+                <span className="font-mono text-xs opacity-50 shrink-0 mt-0.5">//</span>
+                <span className="opacity-80">
+                  {noteName}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -436,17 +520,7 @@ export default function Itinerary() {
             <h2 className="font-display text-3xl font-bold text-white mb-16 border-b border-white/10 pb-4 text-center uppercase tracking-widest">{t('Expedition Gear')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {gear.map((category) => (
-                <div key={category.id} className="bg-zinc-900/30 border border-white/10 rounded-2xl p-6 hover:bg-zinc-900/50 transition-colors">
-                  <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full" />
-                    {language === 'hu' && category.name_hu ? category.name_hu : category.name}
-                  </h3>
-                  <ul className="space-y-3">
-                    {category.items.map((item) => (
-                      <GearItem key={item.id} item={item} />
-                    ))}
-                  </ul>
-                </div>
+                <GearCategoryCard key={category.id} category={category} language={language} />
               ))}
             </div>
           </div>

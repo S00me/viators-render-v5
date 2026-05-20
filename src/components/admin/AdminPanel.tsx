@@ -444,59 +444,75 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     }
   };
 
-  const handleAddItem = async (categoryId: number) => {
-    const name = prompt('Item Name:');
+  const fetchGearData = async () => {
+    try {
+      const gearRes = await fetch('/api/gear');
+      const gear = await gearRes.json();
+      setGearCategories(gear);
+    } catch (e) {
+      console.error('Failed to fetch gear', e);
+    }
+  };
+
+  const handleAddItem = async (categoryId: number, parentItemId?: number, isNote?: boolean) => {
+    const name = prompt(isNote ? 'Note Text:' : (parentItemId ? 'Sub-Item Name:' : 'Item Name:'));
     if (!name) return;
-    const name_hu = prompt('Item Name (HU):');
+    const name_hu = isNote ? '' : prompt(parentItemId ? 'Sub-Item Name (HU):' : 'Item Name (HU):');
     try {
       const res = await fetch('/api/gear/items', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category_id: categoryId, name, name_hu }),
+        body: JSON.stringify({ category_id: categoryId, name, name_hu, parent_item_id: parentItemId, is_note: isNote }),
       });
       const data = await res.json();
       if (data.success) {
-        setGearCategories(gearCategories.map(c => 
-          c.id === categoryId ? { ...c, items: [...c.items, { id: data.id, name, name_hu, category_id: categoryId }] } : c
-        ));
+        await fetchGearData();
       }
     } catch (e) {
       console.error('Failed to add item', e);
     }
   };
 
-  const handleDeleteItem = async (categoryId: number, itemId: number) => {
+  const handleDeleteItem = async (itemId: number) => {
     try {
       await fetch(`/api/gear/items/${itemId}`, { method: 'DELETE' });
-      setGearCategories(gearCategories.map(c => 
-        c.id === categoryId ? { ...c, items: c.items.filter((i: any) => i.id !== itemId) } : c
-      ));
+      await fetchGearData();
     } catch (e) {
       console.error('Failed to delete item', e);
     }
   };
 
-  const handleUpdateItem = async (categoryId: number, itemId: number, field: 'name' | 'name_hu', value: string) => {
-    const updatedCategories = gearCategories.map(c => {
-      if (c.id === categoryId) {
-        return {
-          ...c,
-          items: c.items.map((i: any) => i.id === itemId ? { ...i, [field]: value } : i)
-        };
-      }
-      return c;
+  const handleUpdateItem = async (itemId: number, field: 'name' | 'name_hu', value: string) => {
+    // Optimistic UI update could go here but it's nested deep, so we just mutate and fetch
+    // Actually, we need the full item to put. So let's find it.
+    let targetItem: any = null;
+    gearCategories.forEach(c => {
+      c.items.forEach((i: any) => {
+        if (i.id === itemId) targetItem = i;
+        i.sub_items?.forEach((si: any) => { if (si.id === itemId) targetItem = si; });
+        i.notes?.forEach((ni: any) => { if (ni.id === itemId) targetItem = ni; });
+      });
     });
-    setGearCategories(updatedCategories);
+    if (!targetItem) return;
     
-    const category = updatedCategories.find(c => c.id === categoryId);
-    const item = category?.items.find((i: any) => i.id === itemId);
-    if (!item) return;
-    
+    // Optimistic update for rapid typing
+    setGearCategories([...gearCategories.map(c => ({
+      ...c,
+      items: c.items.map((i: any) => {
+        if (i.id === itemId) return { ...i, [field]: value };
+        return {
+          ...i,
+          sub_items: i.sub_items?.map((si: any) => si.id === itemId ? { ...si, [field]: value } : si),
+          notes: i.notes?.map((ni: any) => ni.id === itemId ? { ...ni, [field]: value } : ni)
+        };
+      })
+    }))]);
+
     try {
       await fetch(`/api/gear/items/${itemId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: item.name, name_hu: item.name_hu }),
+        body: JSON.stringify({ name: field === 'name' ? value : targetItem.name, name_hu: field === 'name_hu' ? value : targetItem.name_hu }),
       });
     } catch (e) {
       console.error('Failed to update item', e);
@@ -1158,12 +1174,42 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     
                     <ul className="space-y-2 mb-4">
                       {category.items.map((item: any) => (
-                        <li key={item.id} className="flex justify-between items-center bg-black/50 px-3 py-2 rounded text-sm text-zinc-300 gap-2">
-                          <div className="flex-1 flex gap-2">
-                            <input type="text" value={item.name} onChange={e => handleUpdateItem(category.id, item.id, 'name', e.target.value)} className="bg-transparent border-b border-white/10 w-full focus:outline-none focus:border-purple-500" placeholder="Item Name" />
-                            <input type="text" value={item.name_hu || ''} onChange={e => handleUpdateItem(category.id, item.id, 'name_hu', e.target.value)} className="bg-transparent border-b border-white/10 text-zinc-500 w-full focus:outline-none focus:border-purple-500" placeholder="Item Name (HU)" />
+                        <li key={item.id} className="flex flex-col bg-black/50 p-3 rounded text-sm text-zinc-300 gap-2">
+                          <div className="flex justify-between items-center gap-2">
+                            <div className="flex-1 flex gap-2">
+                              <input type="text" value={item.name} onChange={e => handleUpdateItem(item.id, 'name', e.target.value)} className="bg-transparent border-b border-white/10 w-full focus:outline-none focus:border-purple-500" placeholder="Item Name" />
+                              <input type="text" value={item.name_hu || ''} onChange={e => handleUpdateItem(item.id, 'name_hu', e.target.value)} className="bg-transparent border-b border-white/10 text-zinc-500 w-full focus:outline-none focus:border-purple-500" placeholder="Item Name (HU)" />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button onClick={() => handleAddItem(category.id, item.id, false)} title="Add Sub-Item" className="text-zinc-500 hover:text-green-500 font-bold">+</button>
+                              <button onClick={() => handleAddItem(category.id, item.id, true)} title="Add Note" className="text-zinc-500 hover:text-yellow-500 font-bold">N</button>
+                              <button onClick={() => handleDeleteItem(item.id)} className="text-zinc-500 hover:text-red-500"><X size={14} /></button>
+                            </div>
                           </div>
-                          <button onClick={() => handleDeleteItem(category.id, item.id)} className="text-zinc-500 hover:text-red-500"><X size={14} /></button>
+                          
+                          {/* Sub Items */}
+                          {(item.sub_items?.length > 0 || item.notes?.length > 0) && (
+                            <div className="pl-4 border-l border-white/10 space-y-2 mt-2">
+                              {item.sub_items?.map((sub: any) => (
+                                <div key={sub.id} className="flex justify-between items-center bg-black/30 px-2 py-1 rounded gap-2">
+                                  <div className="flex-1 flex gap-2">
+                                    <input type="text" value={sub.name} onChange={e => handleUpdateItem(sub.id, 'name', e.target.value)} className="bg-transparent border-b border-white/10 w-full focus:outline-none focus:border-purple-500" placeholder="Sub-Item Name" />
+                                    <input type="text" value={sub.name_hu || ''} onChange={e => handleUpdateItem(sub.id, 'name_hu', e.target.value)} className="bg-transparent border-b border-white/10 text-zinc-500 w-full focus:outline-none focus:border-purple-500" placeholder="Sub-Item Name (HU)" />
+                                  </div>
+                                  <button onClick={() => handleDeleteItem(sub.id)} className="text-zinc-500 hover:text-red-500"><X size={12} /></button>
+                                </div>
+                              ))}
+                              {item.notes?.map((note: any) => (
+                                <div key={note.id} className="flex justify-between items-center bg-zinc-900/50 px-2 py-1 rounded gap-2 text-zinc-500">
+                                  <span className="font-mono text-xs">//</span>
+                                  <div className="flex-1 flex gap-2">
+                                    <input type="text" value={note.name} onChange={e => handleUpdateItem(note.id, 'name', e.target.value)} className="bg-transparent border-b border-white/5 w-full focus:outline-none focus:border-yellow-500/50 text-zinc-400" placeholder="Note text" />
+                                  </div>
+                                  <button onClick={() => handleDeleteItem(note.id)} className="text-zinc-500 hover:text-red-500"><X size={12} /></button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </li>
                       ))}
                     </ul>

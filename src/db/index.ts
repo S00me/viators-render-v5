@@ -129,6 +129,8 @@ export function initDb() {
   }
 
   try { db.exec(`ALTER TABLE gear_categories ADD COLUMN name_hu TEXT`); } catch (e) {}
+  try { db.exec(`ALTER TABLE gear_items ADD COLUMN parent_item_id INTEGER`); } catch (e) {}
+  try { db.exec(`ALTER TABLE gear_items ADD COLUMN is_note BOOLEAN DEFAULT 0`); } catch (e) {}
   try { db.exec(`ALTER TABLE gear_items ADD COLUMN name_hu TEXT`); } catch (e) {}
   try { db.exec(`ALTER TABLE itinerary_map_groups ADD COLUMN name_hu TEXT`); } catch (e) {}
 

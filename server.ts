@@ -308,11 +308,17 @@ app.delete('/api/itinerary/map-files/:id', requireAdmin, (req, res) => {
 // Gear
 app.get('/api/gear', (req, res) => {
   const categories = db.prepare('SELECT * FROM gear_categories').all();
-  const items = db.prepare('SELECT * FROM gear_items').all();
+  const allItems = db.prepare('SELECT * FROM gear_items').all();
   
   const gear = categories.map((cat: any) => ({
     ...cat,
-    items: items.filter((item: any) => item.category_id === cat.id)
+    items: allItems
+      .filter((item: any) => item.category_id === cat.id && !item.parent_item_id)
+      .map((item: any) => ({
+        ...item,
+        sub_items: allItems.filter((child: any) => child.parent_item_id === item.id && !child.is_note),
+        notes: allItems.filter((child: any) => child.parent_item_id === item.id && child.is_note)
+      }))
   }));
   
   res.json(gear);
@@ -338,15 +344,15 @@ app.delete('/api/gear/categories/:id', requireAdmin, (req, res) => {
 });
 
 app.post('/api/gear/items', requireAdmin, (req, res) => {
-  const { category_id, name, name_hu } = req.body;
-  const info = db.prepare('INSERT INTO gear_items (category_id, name, name_hu) VALUES (?, ?, ?)').run(category_id, name, name_hu);
+  const { category_id, name, name_hu, parent_item_id, is_note } = req.body;
+  const info = db.prepare('INSERT INTO gear_items (category_id, name, name_hu, parent_item_id, is_note) VALUES (?, ?, ?, ?, ?)').run(category_id, name, name_hu, parent_item_id || null, is_note ? 1 : 0);
   res.json({ success: true, id: info.lastInsertRowid });
 });
 
 app.put('/api/gear/items/:id', requireAdmin, (req, res) => {
   const { id } = req.params;
-  const { name, name_hu } = req.body;
-  db.prepare('UPDATE gear_items SET name = ?, name_hu = ? WHERE id = ?').run(name, name_hu, id);
+  const { name, name_hu, parent_item_id, is_note } = req.body;
+  db.prepare('UPDATE gear_items SET name = ?, name_hu = ?, parent_item_id = ?, is_note = ? WHERE id = ?').run(name, name_hu, parent_item_id || null, is_note ? 1 : 0, id);
   res.json({ success: true });
 });
 
