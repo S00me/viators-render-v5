@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Droplets, Utensils, Home, ExternalLink, CheckCircle, ShoppingCart, ChevronUp, X, Lock, Unlock } from 'lucide-react';
+import { Droplets, Utensils, Home, ExternalLink, CheckCircle, ShoppingCart, ChevronUp, X, Lock, Unlock, Plus } from 'lucide-react';
 import Map from '@/components/map/Map';
 import { parseTrack } from '@/lib/gpx';
 import { Header } from '@/components/layout/Header';
@@ -51,46 +51,65 @@ interface GearCategory {
   id: number;
   name: string;
   name_hu?: string;
+  color?: string;
   items: GearItemData[];
 }
 
 interface GearItemProps {
   item: GearItemData;
+  color?: string;
+  isSubItem?: boolean;
 }
 
 function GearCategoryCard({ category, language }: { category: GearCategory; language: string }) {
   const [folded, setFolded] = useState(true);
   const title = language === 'hu' && category.name_hu ? category.name_hu : category.name;
+  const color = category.color || '#A855F7';
+  const isLightRed = color.toLowerCase() === '#fca5a5' || color.toLowerCase() === 'red' || color.toLowerCase() === '#ef4444';
   
   const itemCount = category.items.length;
 
   return (
-    <div className="bg-zinc-900/30 border border-white/10 rounded-2xl p-6 hover:bg-zinc-900/50 transition-colors">
+    <div 
+       className={`border border-white/10 rounded-2xl transition-colors overflow-hidden flex flex-col group/card ${isLightRed ? 'bg-red-950/20 hover:bg-red-950/40' : 'bg-zinc-900/30 hover:bg-zinc-900/50'}`}
+    >
       <div 
-        className="flex justify-between items-center cursor-pointer"
+        className="flex justify-between items-center cursor-pointer p-6"
         onClick={() => setFolded(!folded)}
       >
-        <h3 className="font-bold text-white flex items-center gap-2">
-          <div className="w-2 h-2 bg-purple-500 rounded-full" />
+        <h3 className="font-bold text-white flex items-center gap-2 select-none">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
           {title} <span className="text-zinc-500 text-sm font-normal">({itemCount})</span>
         </h3>
-        <button className="text-zinc-500 hover:text-white transition-colors">
-          {folded ? '+' : '-'}
-        </button>
+        <motion.div 
+          animate={{ rotate: folded ? 0 : 45 }}
+          className="w-8 h-8 rounded-full border border-white/10 group-hover/card:border-white/30 flex shrink-0 items-center justify-center bg-white/5 transition-colors text-zinc-400 group-hover/card:text-white"
+        >
+          <Plus size={16} />
+        </motion.div>
       </div>
       
+      <AnimatePresence>
       {!folded && (
-        <ul className="space-y-3 mt-4">
-          {category.items.map((item) => (
-            <GearItem key={item.id} item={item} />
-          ))}
-        </ul>
+        <motion.div 
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          className="overflow-hidden"
+        >
+          <ul className="space-y-3 px-6 pb-6">
+            {category.items.map((item) => (
+              <GearItem key={item.id} item={item} color={color} />
+            ))}
+          </ul>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function GearItem({ item, parentChecked }: GearItemProps & { parentChecked?: boolean }) {
+function GearItem({ item, parentChecked, color = '#A855F7', isSubItem = false }: GearItemProps & { parentChecked?: boolean }) {
   const [checked, setChecked] = useState(false);
   const [folded, setFolded] = useState(true);
   const { language } = useLanguage();
@@ -103,29 +122,36 @@ function GearItem({ item, parentChecked }: GearItemProps & { parentChecked?: boo
 
   const itemName = language === 'hu' && item.name_hu ? item.name_hu : item.name;
   const hasChildren = (item.sub_items && item.sub_items.length > 0) || (item.notes && item.notes.length > 0);
-  const childCount = (item.sub_items?.length || 0) + (item.notes?.length || 0);
+  const childCount = item.sub_items?.length || 0;
 
   return (
     <div className="flex flex-col gap-2">
       <li 
-        className="flex items-center gap-3 text-sm group w-fit"
+        className={`flex items-center gap-3 group w-fit ${isSubItem ? 'text-xs' : 'text-sm'}`}
       >
         <div 
           className="flex items-center gap-3 cursor-pointer"
           onClick={() => setChecked(!checked)}
         >
-          <div className={`mt-0.5 w-4 h-4 rounded-full border transition-all duration-300 flex items-center justify-center shrink-0 ${checked ? 'bg-purple-500 border-purple-500' : 'border-zinc-600 group-hover:border-purple-400'}`}>
+          <div 
+            className={`mt-0.5 rounded-full border transition-all duration-300 flex items-center justify-center shrink-0 ${isSubItem ? 'w-3 h-3' : 'w-4 h-4'}`}
+            style={{ 
+              borderColor: checked ? color : undefined, 
+              backgroundColor: checked ? color : 'transparent' 
+            }}
+            // to support hover we might need inline styles or just use tailwind classes if we had color variables but we will use style
+          >
             {checked && (
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
-                <CheckCircle size={10} className="text-white" />
+                <CheckCircle size={isSubItem ? 8 : 10} className="text-black" />
               </motion.div>
             )}
           </div>
-          <span className={`transition-colors duration-300 ${checked ? 'text-zinc-500 line-through' : 'text-zinc-300 group-hover:text-white'}`}>
+          <span className={`transition-colors duration-300 ${checked ? 'opacity-50 line-through' : 'text-zinc-300 group-hover:text-white'}`}>
             {itemName}
           </span>
         </div>
@@ -135,30 +161,37 @@ function GearItem({ item, parentChecked }: GearItemProps & { parentChecked?: boo
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setFolded(!folded); }} 
             className="text-zinc-500 hover:text-white transition-colors ml-2 font-mono text-xs cursor-pointer"
           >
-            {folded ? `+ (${childCount})` : '-'}
+            {folded ? (childCount > 0 ? `+ (${childCount})` : '+') : '-'}
           </button>
         )}
       </li>
       
       {/* Sub-items and notes */}
+      <AnimatePresence>
       {hasChildren && !folded && (
-        <div className="pl-7 space-y-2">
+        <motion.div 
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          className="pl-7 space-y-2 overflow-hidden"
+        >
           {item.sub_items?.map(sub => (
-            <GearItem key={sub.id} item={sub} parentChecked={checked} />
+            <GearItem key={sub.id} item={sub} parentChecked={checked} color={color} isSubItem={true} />
           ))}
           {item.notes?.map(note => {
             const noteName = language === 'hu' && note.name_hu ? note.name_hu : note.name;
             return (
-              <div key={note.id} className="flex items-start gap-2 text-sm text-zinc-500 w-fit">
-                <span className="font-mono text-xs opacity-50 shrink-0 mt-0.5">//</span>
-                <span className="opacity-80">
+              <div key={note.id} className="flex items-start gap-2 text-xs w-fit" style={{ color: color, filter: 'brightness(0.65)' }}>
+                <span className="font-mono text-[10px] opacity-70 shrink-0 mt-0.5">//</span>
+                <span className="opacity-90">
                   {noteName}
                 </span>
               </div>
             );
           })}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -366,6 +399,7 @@ export default function Itinerary() {
               zoom={12} 
               className="w-full h-full" 
               fitBounds={true}
+              fitBoundsPadding={isMobile ? [10, 10] : [50, 50]}
               basemap="outdoors"
               interactive={!isMobile || mapUnlocked}
             />
@@ -497,7 +531,7 @@ export default function Itinerary() {
                           </div>
                         </div>
                         <div className="hidden md:flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${day.amenities?.includes('store') ? 'bg-yellow-900/30 text-yellow-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                          <div className={`p-2 rounded-lg ${day.amenities?.includes('store') ? 'bg-orange-900/30 text-orange-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
                             <ShoppingCart size={18} />
                           </div>
                           <div>

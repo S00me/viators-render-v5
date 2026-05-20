@@ -325,15 +325,15 @@ app.get('/api/gear', (req, res) => {
 });
 
 app.post('/api/gear/categories', requireAdmin, (req, res) => {
-  const { name, name_hu } = req.body;
-  const info = db.prepare('INSERT INTO gear_categories (name, name_hu) VALUES (?, ?)').run(name, name_hu);
+  const { name, name_hu, color } = req.body;
+  const info = db.prepare('INSERT INTO gear_categories (name, name_hu, color) VALUES (?, ?, ?)').run(name, name_hu, color || null);
   res.json({ success: true, id: info.lastInsertRowid });
 });
 
 app.put('/api/gear/categories/:id', requireAdmin, (req, res) => {
   const { id } = req.params;
-  const { name, name_hu } = req.body;
-  db.prepare('UPDATE gear_categories SET name = ?, name_hu = ? WHERE id = ?').run(name, name_hu, id);
+  const { name, name_hu, color } = req.body;
+  db.prepare('UPDATE gear_categories SET name = ?, name_hu = ?, color = ? WHERE id = ?').run(name, name_hu, color || null, id);
   res.json({ success: true });
 });
 
@@ -352,7 +352,11 @@ app.post('/api/gear/items', requireAdmin, (req, res) => {
 app.put('/api/gear/items/:id', requireAdmin, (req, res) => {
   const { id } = req.params;
   const { name, name_hu, parent_item_id, is_note } = req.body;
-  db.prepare('UPDATE gear_items SET name = ?, name_hu = ?, parent_item_id = ?, is_note = ? WHERE id = ?').run(name, name_hu, parent_item_id || null, is_note ? 1 : 0, id);
+  if (parent_item_id !== undefined && is_note !== undefined) {
+    db.prepare('UPDATE gear_items SET name = ?, name_hu = ?, parent_item_id = ?, is_note = ? WHERE id = ?').run(name, name_hu, parent_item_id || null, is_note ? 1 : 0, id);
+  } else {
+    db.prepare('UPDATE gear_items SET name = ?, name_hu = ? WHERE id = ?').run(name, name_hu, id);
+  }
   res.json({ success: true });
 });
 

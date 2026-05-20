@@ -428,7 +428,7 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
     }
   };
 
-  const handleUpdateCategory = async (id: number, field: 'name' | 'name_hu', value: string) => {
+  const handleUpdateCategory = async (id: number, field: 'name' | 'name_hu' | 'color', value: string) => {
     const updatedCategories = gearCategories.map(c => c.id === id ? { ...c, [field]: value } : c);
     setGearCategories(updatedCategories);
     const category = updatedCategories.find(c => c.id === id);
@@ -437,12 +437,19 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
       await fetch(`/api/gear/categories/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: category.name, name_hu: category.name_hu }),
+        body: JSON.stringify({ name: category.name, name_hu: category.name_hu, color: category.color }),
       });
     } catch (e) {
       console.error('Failed to update category', e);
     }
   };
+
+  const PREDEFINED_COLORS = [
+    '#EF4444', '#FCA5A5', '#F97316', '#EAB308', 
+    '#84CC16', '#22C55E', '#10B981', '#14B8A6', 
+    '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1', 
+    '#8B5CF6', '#D946EF', '#EC4899', '#FFFFFF'
+  ];
 
   const fetchGearData = async () => {
     try {
@@ -1164,12 +1171,24 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {gearCategories.map((category) => (
                   <div key={category.id} className="bg-black/30 border border-white/5 p-6 rounded-xl">
-                    <div className="flex justify-between items-center mb-4 gap-2">
-                      <div className="flex-1 flex gap-2">
-                        <input type="text" value={category.name} onChange={e => handleUpdateCategory(category.id, 'name', e.target.value)} className="bg-transparent border-b border-white/10 text-white font-bold w-full focus:outline-none focus:border-purple-500" placeholder="Category Name" />
-                        <input type="text" value={category.name_hu || ''} onChange={e => handleUpdateCategory(category.id, 'name_hu', e.target.value)} className="bg-transparent border-b border-white/10 text-zinc-400 text-sm w-full focus:outline-none focus:border-purple-500" placeholder="Category Name (HU)" />
+                    <div className="flex flex-col gap-2 mb-4">
+                      <div className="flex justify-between items-center gap-2">
+                        <div className="flex-1 flex gap-2">
+                          <input type="text" value={category.name} onChange={e => handleUpdateCategory(category.id, 'name', e.target.value)} className="bg-transparent border-b border-white/10 text-white font-bold w-full focus:outline-none focus:border-purple-500" placeholder="Category Name" />
+                          <input type="text" value={category.name_hu || ''} onChange={e => handleUpdateCategory(category.id, 'name_hu', e.target.value)} className="bg-transparent border-b border-white/10 text-zinc-400 text-sm w-full focus:outline-none focus:border-purple-500" placeholder="Category Name (HU)" />
+                        </div>
+                        <button onClick={() => handleDeleteCategory(category.id)} className="text-red-500 hover:text-red-400"><Trash size={16} /></button>
                       </div>
-                      <button onClick={() => handleDeleteCategory(category.id)} className="text-red-500 hover:text-red-400"><Trash size={16} /></button>
+                      <div className="flex items-center gap-1 flex-wrap mb-2">
+                        {PREDEFINED_COLORS.map(c => (
+                          <button
+                            key={c}
+                            onClick={() => handleUpdateCategory(category.id, 'color', c)}
+                            className={`w-4 h-4 rounded-full ${category.color === c || (!category.color && c === '#8B5CF6') ? 'ring-2 ring-white scale-110' : 'hover:scale-110'}`}
+                            style={{ backgroundColor: c }}
+                          />
+                        ))}
+                      </div>
                     </div>
                     
                     <ul className="space-y-2 mb-4">
@@ -1204,6 +1223,7 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                                   <span className="font-mono text-xs">//</span>
                                   <div className="flex-1 flex gap-2">
                                     <input type="text" value={note.name} onChange={e => handleUpdateItem(note.id, 'name', e.target.value)} className="bg-transparent border-b border-white/5 w-full focus:outline-none focus:border-yellow-500/50 text-zinc-400" placeholder="Note text" />
+                                    <input type="text" value={note.name_hu || ''} onChange={e => handleUpdateItem(note.id, 'name_hu', e.target.value)} className="bg-transparent border-b border-white/5 w-full focus:outline-none focus:border-yellow-500/50 text-zinc-500" placeholder="Note text (HU)" />
                                   </div>
                                   <button onClick={() => handleDeleteItem(note.id)} className="text-zinc-500 hover:text-red-500"><X size={12} /></button>
                                 </div>
