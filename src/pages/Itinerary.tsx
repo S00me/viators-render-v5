@@ -61,7 +61,7 @@ interface GearItemProps {
   isSubItem?: boolean;
 }
 
-function GearCategoryCard({ category, language }: { category: GearCategory; language: string }) {
+function GearCategoryCard({ category, language, globalExpandPhase }: { category: GearCategory; language: string; globalExpandPhase?: 0 | 1 | 2 }) {
   const [folded, setFolded] = useState(true);
   const title = language === 'hu' && category.name_hu ? category.name_hu : category.name;
   const color = category.color || '#A855F7';
@@ -70,6 +70,13 @@ function GearCategoryCard({ category, language }: { category: GearCategory; lang
   const itemCount = category.items.length;
   const listRef = useRef<HTMLUListElement>(null);
   const [hiddenCount, setHiddenCount] = useState(0);
+
+  useEffect(() => {
+    if (globalExpandPhase !== undefined) {
+      if (globalExpandPhase === 0) setFolded(true);
+      else setFolded(false);
+    }
+  }, [globalExpandPhase]);
 
   useEffect(() => {
     const checkOverflow = () => {
@@ -133,7 +140,7 @@ function GearCategoryCard({ category, language }: { category: GearCategory; lang
         >
           <ul ref={listRef} className="space-y-3 px-6 pb-6 pt-2 h-auto">
             {category.items.map((item) => (
-              <GearItem key={item.id} item={item} color={color} />
+              <GearItem key={item.id} item={item} color={color} globalExpandPhase={globalExpandPhase} />
             ))}
           </ul>
         </motion.div>
@@ -157,10 +164,22 @@ function GearCategoryCard({ category, language }: { category: GearCategory; lang
   );
 }
 
-function GearItem({ item, parentChecked, color = '#A855F7', isSubItem = false }: GearItemProps & { parentChecked?: boolean }) {
+interface GearItemExtendedProps extends GearItemProps {
+  parentChecked?: boolean;
+  globalExpandPhase?: 0 | 1 | 2;
+}
+
+function GearItem({ item, parentChecked, color = '#A855F7', isSubItem = false, globalExpandPhase }: GearItemExtendedProps) {
   const [checked, setChecked] = useState(false);
   const [folded, setFolded] = useState(true);
   const { language } = useLanguage();
+
+  useEffect(() => {
+    if (globalExpandPhase !== undefined) {
+      if (globalExpandPhase === 2) setFolded(false);
+      else setFolded(true);
+    }
+  }, [globalExpandPhase]);
 
   useEffect(() => {
     if (parentChecked !== undefined) {
@@ -229,7 +248,7 @@ function GearItem({ item, parentChecked, color = '#A855F7', isSubItem = false }:
           className="pl-7 space-y-2 overflow-hidden"
         >
           {item.sub_items?.map(sub => (
-            <GearItem key={sub.id} item={sub} parentChecked={checked} color={color} isSubItem={true} />
+            <GearItem key={sub.id} item={sub} parentChecked={checked} color={color} isSubItem={true} globalExpandPhase={globalExpandPhase} />
           ))}
           {item.notes?.map(note => {
             const noteName = language === 'hu' && note.name_hu ? note.name_hu : note.name;
@@ -344,7 +363,7 @@ function MobileAmenityIcon({ active, activeNode, inactiveNode, label }: { active
   const [open, setOpen] = useState(false);
   return (
     <div className="flex flex-col items-center gap-1 cursor-pointer w-20" onClick={() => setOpen(!open)}>
-      <div className={`p-2.5 rounded-lg transition-colors ${active ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+      <div className={`p-2 rounded-lg transition-colors ${active ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
          {active ? activeNode : inactiveNode}
       </div>
       <AnimatePresence>
@@ -374,6 +393,7 @@ export default function Itinerary() {
   const [upcomingTitleHu, setUpcomingTitleHu] = useState<string>('');
   const [isMobile, setIsMobile] = useState(false);
   const [mapUnlocked, setMapUnlocked] = useState(false);
+  const [gearExpandPhase, setGearExpandPhase] = useState<0 | 1 | 2>(0);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -502,6 +522,7 @@ export default function Itinerary() {
               className="w-full h-full" 
               fitBounds={true}
               fitBoundsPadding={isMobile ? [0, 0] : [50, 50]}
+              zoomOffset={isMobile ? 1 : 0}
               basemap="outdoors"
               interactive={!isMobile || mapUnlocked}
             />
@@ -539,16 +560,26 @@ export default function Itinerary() {
             <h2 className="font-display text-3xl font-bold text-white mb-16 border-b border-white/10 pb-4 text-center uppercase tracking-widest">{t('Daily Breakdown')}</h2>
             
             <div className="space-y-24">
-              {days.map((day, index) => (
+              {days.map((day, index) => {
+                const hasShelter = !!getDayShelter(day);
+                const isRest = isRestDay(day);
+
+                return (
                 <motion.div 
                   key={day.id}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "150px" }}
                   transition={{ delay: index * 0.1 }}
-                  className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+                  className={
+                    !hasShelter
+                      ? "grid grid-cols-1 lg:grid-cols-2 gap-8"
+                      : isRest
+                        ? "grid grid-cols-1 lg:grid-cols-3 gap-8"
+                        : "grid grid-cols-1 lg:grid-cols-3 gap-8"
+                  }
                 >
-                  <div className="lg:col-span-1">
+                  <div className={!hasShelter ? "lg:col-span-1" : isRest ? "lg:col-span-2" : "lg:col-span-1"}>
                     <div className="sticky top-24">
                       <span className="text-purple-500 font-mono text-xl font-bold block mb-2">{t('DAY')} {day.day_number}</span>
                       <h3 className="text-2xl font-bold text-white mb-4">{getDayTitle(day)}</h3>
@@ -566,9 +597,10 @@ export default function Itinerary() {
                     </div>
                   </div>
                   
-                  <div className="lg:col-span-2">
-                    <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 md:p-8">
-                      {!isRestDay(day) && (
+                  {hasShelter && (
+                  <div className={isRest ? "lg:col-span-1 lg:flex lg:justify-end" : "lg:col-span-2"}>
+                    <div className={`bg-zinc-900/50 border border-white/10 rounded-2xl p-6 md:p-8 ${isRest ? 'text-right flex flex-col items-end w-full lg:w-auto h-fit min-w-[250px]' : ''}`}>
+                      {!isRest && (
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
                           <div className="order-1 md:order-1">
                             <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Distance')}</span>
@@ -589,12 +621,12 @@ export default function Itinerary() {
                         </div>
                       )}
                       
-                      <div className={`flex flex-col md:grid md:grid-cols-4 gap-4 ${!isRestDay(day) ? 'border-t border-white/5 pt-6' : ''}`}>
-                        <div className="flex items-center gap-3">
+                      <div className={`flex flex-col ${!isRest ? 'md:grid md:grid-cols-4' : ''} gap-4 ${!isRest ? 'border-t border-white/5 pt-6' : ''}`}>
+                        <div className={`flex items-center gap-3 ${isRest ? 'justify-end' : ''}`}>
                           <div className="p-2 bg-zinc-800 rounded-lg text-zinc-400 flex-shrink-0">
                             <Home size={18} />
                           </div>
-                          <div>
+                          <div className={isRest ? 'text-right' : ''}>
                             <span className="text-xs text-zinc-500 block">{t('Shelter')}</span>
                             <span className="text-sm text-white">{getDayShelter(day)}</span>
                           </div>
@@ -657,8 +689,10 @@ export default function Itinerary() {
                       </div>
                     </div>
                   </div>
+                  )}
                 </motion.div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
@@ -669,8 +703,26 @@ export default function Itinerary() {
             <h2 className="font-display text-3xl font-bold text-white mb-16 border-b border-white/10 pb-4 text-center uppercase tracking-widest">{t('Expedition Gear')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {gear.map((category) => (
-                <GearCategoryCard key={category.id} category={category} language={language} />
+                <GearCategoryCard key={category.id} category={category} language={language} globalExpandPhase={gearExpandPhase} />
               ))}
+            </div>
+            
+            <div className="mt-16 flex justify-center">
+              <button 
+                onClick={() => setGearExpandPhase(p => (p + 1) % 3 as 0 | 1 | 2)}
+                className="group relative flex items-center gap-4 bg-zinc-900 border border-white/10 px-6 py-3 rounded-full hover:bg-zinc-800 transition-colors shadow-xl"
+              >
+                <div className="flex gap-1.5 items-center justify-center">
+                  <div className={`w-2 h-2 rounded-full transition-colors ${gearExpandPhase === 0 ? 'bg-purple-500' : 'bg-white/20'}`} />
+                  <div className={`w-2 h-2 rounded-full transition-colors ${gearExpandPhase === 1 ? 'bg-purple-500' : 'bg-white/20'}`} />
+                  <div className={`w-2 h-2 rounded-full transition-colors ${gearExpandPhase === 2 ? 'bg-purple-500' : 'bg-white/20'}`} />
+                </div>
+                <span className="text-white text-sm font-medium tracking-wide uppercase">
+                  {gearExpandPhase === 0 ? (language === 'hu' ? 'Kategóriák Kinyitása' : 'Expand Categories') :
+                   gearExpandPhase === 1 ? (language === 'hu' ? 'Részletek Kinyitása' : 'Expand All Details') :
+                   (language === 'hu' ? 'Összes Bezárása' : 'Close All')}
+                </span>
+              </button>
             </div>
           </div>
         </section>

@@ -20,13 +20,14 @@ interface MapProps {
   className?: string;
   fitBounds?: boolean;
   fitBoundsPadding?: [number, number];
+  zoomOffset?: number;
   basemap?: 'dark' | 'outdoors' | 'topo-dark' | 'none';
   lineColor?: string;
   lineWeight?: number;
   interactive?: boolean;
 }
 
-function MapUpdater({ center, zoom, route, routes, fitBounds, fitBoundsPadding }: { center: [number, number]; zoom: number; route?: [number, number][]; routes?: { coordinates: [number, number][]; color: string }[]; fitBounds?: boolean; fitBoundsPadding?: [number, number] }) {
+function MapUpdater({ center, zoom, route, routes, fitBounds, fitBoundsPadding, zoomOffset }: { center: [number, number]; zoom: number; route?: [number, number][]; routes?: { coordinates: [number, number][]; color: string }[]; fitBounds?: boolean; fitBoundsPadding?: [number, number]; zoomOffset?: number }) {
   const map = useMap();
   
   useEffect(() => {
@@ -50,6 +51,12 @@ function MapUpdater({ center, zoom, route, routes, fitBounds, fitBoundsPadding }
 
       if (hasPoints && bounds.isValid()) {
         map.fitBounds(bounds, { padding: fitBoundsPadding || [50, 50] });
+        if (zoomOffset) {
+          // Setting a small delay to ensure fitBounds completes before zoom change
+          setTimeout(() => {
+            map.setZoom(map.getZoom() + zoomOffset);
+          }, 50);
+        }
       } else {
         // Fallback to center/zoom if no valid bounds
         map.setView(center, zoom);
@@ -58,7 +65,7 @@ function MapUpdater({ center, zoom, route, routes, fitBounds, fitBoundsPadding }
       // If not fitting bounds, just set view
       map.setView(center, zoom);
     }
-  }, [center, zoom, map, fitBounds, route, routes, fitBoundsPadding]);
+  }, [center, zoom, map, fitBounds, route, routes, fitBoundsPadding, zoomOffset]);
   return null;
 }
 
@@ -107,7 +114,7 @@ function MapInteractivityManager({ interactive }: { interactive: boolean }) {
   return null;
 }
 
-export default function Map({ route, routes, center = [46.5775, 7.9052], zoom = 13, className, fitBounds = false, fitBoundsPadding, basemap = 'dark', lineColor = '#8B5CF6', lineWeight = 4, interactive = true }: MapProps) {
+export default function Map({ route, routes, center = [46.5775, 7.9052], zoom = 13, className, fitBounds = false, fitBoundsPadding, zoomOffset, basemap = 'dark', lineColor = '#8B5CF6', lineWeight = 4, interactive = true }: MapProps) {
   
   const tileLayer = (basemap === 'outdoors' || basemap === 'topo-dark')
     ? {
@@ -157,7 +164,7 @@ export default function Map({ route, routes, center = [46.5775, 7.9052], zoom = 
         />
       ))}
 
-      <MapUpdater center={center} zoom={zoom} route={route} routes={routes} fitBounds={fitBounds} fitBoundsPadding={fitBoundsPadding} />
+      <MapUpdater center={center} zoom={zoom} route={route} routes={routes} fitBounds={fitBounds} fitBoundsPadding={fitBoundsPadding} zoomOffset={zoomOffset} />
       <MapInteractivityManager interactive={interactive} />
       {interactive && <CustomZoomControl />}
     </MapContainer>

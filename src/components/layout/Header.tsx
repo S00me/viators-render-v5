@@ -96,12 +96,34 @@ export function Header({ isSubpage: propIsSubpage = false }: HeaderProps) {
 
       <nav className="hidden lg:flex gap-8 items-center">
         {isSubpage ? (
-          <Link
-            to={language === 'hu' ? '/hu' : '/'}
-            className="text-white/70 hover:text-white text-sm font-medium tracking-wide transition-colors uppercase flex items-center gap-2"
-          >
-            {t('nav.return')}
-          </Link>
+          <>
+            <Link
+              to={language === 'hu' ? '/hu' : '/'}
+              className="text-white/70 hover:text-white text-sm font-medium tracking-wide transition-colors uppercase flex items-center gap-2"
+            >
+              {t('nav.return')}
+            </Link>
+            {menuItems.map((item) => (
+              <button
+                key={item.label}
+                onClick={() => {
+                  if (item.action === 'navigate_itinerary') {
+                    navigate(language === 'hu' ? '/hu/itinerary' : '/itinerary');
+                  } else if (isItineraryPage && item.id === 'gear') {
+                    const element = document.getElementById('gear');
+                    if (element) element.scrollIntoView({ behavior: 'smooth' });
+                  } else if (isItineraryPage && item.id === 'itinerary') {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  } else if (item.id) {
+                    scrollToSection(item.id);
+                  }
+                }}
+                className="text-white/70 hover:text-white text-sm font-medium tracking-wide transition-colors uppercase"
+              >
+                {item.label}
+              </button>
+            ))}
+          </>
         ) : (
           <>
             <Link
