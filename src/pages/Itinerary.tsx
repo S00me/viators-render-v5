@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Droplets, Utensils, Home, ExternalLink, CheckCircle, ShoppingCart, ChevronUp, X, Lock, Unlock, Plus } from 'lucide-react';
 import Map from '@/components/map/Map';
@@ -7,6 +7,12 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { HiddenAdminButton } from '@/components/admin/HiddenAdminButton';
 import { useLanguage } from '@/contexts/LanguageContext';
+
+type GearContextType = {
+  expandedNodes: Set<string>;
+  toggleNode: (id: string, isExpanded: boolean) => void;
+};
+export const GearContext = createContext<GearContextType>({ expandedNodes: new Set(), toggleNode: () => {} });
 
 interface ItineraryDay {
   id: number;
@@ -61,8 +67,12 @@ interface GearItemProps {
   isSubItem?: boolean;
 }
 
-function GearCategoryCard({ category, language, globalExpandPhase }: { category: GearCategory; language: string; globalExpandPhase?: 0 | 1 | 2 }) {
-  const [folded, setFolded] = useState(true);
+function GearCategoryCard({ category, language }: { category: GearCategory; language: string }) {
+  const { expandedNodes, toggleNode } = useContext(GearContext);
+  const nodeId = `cat-${category.id}`;
+  const folded = !expandedNodes.has(nodeId);
+  const setFolded = (isFolded: boolean) => toggleNode(nodeId, !isFolded);
+
   const title = language === 'hu' && category.name_hu ? category.name_hu : category.name;
   const color = category.color || '#A855F7';
   const isLightRed = color.toLowerCase() === '#fca5a5' || color.toLowerCase() === 'red' || color.toLowerCase() === '#ef4444';
@@ -70,13 +80,6 @@ function GearCategoryCard({ category, language, globalExpandPhase }: { category:
   const itemCount = category.items.length;
   const listRef = useRef<HTMLUListElement>(null);
   const [hiddenCount, setHiddenCount] = useState(0);
-
-  useEffect(() => {
-    if (globalExpandPhase !== undefined) {
-      if (globalExpandPhase === 0) setFolded(true);
-      else setFolded(false);
-    }
-  }, [globalExpandPhase]);
 
   useEffect(() => {
     const checkOverflow = () => {
@@ -140,7 +143,7 @@ function GearCategoryCard({ category, language, globalExpandPhase }: { category:
         >
           <ul ref={listRef} className="space-y-3 px-6 pb-6 pt-2 h-auto">
             {category.items.map((item) => (
-              <GearItem key={item.id} item={item} color={color} globalExpandPhase={globalExpandPhase} />
+              <GearItem key={item.id} item={item} color={color} />
             ))}
           </ul>
         </motion.div>
@@ -166,20 +169,16 @@ function GearCategoryCard({ category, language, globalExpandPhase }: { category:
 
 interface GearItemExtendedProps extends GearItemProps {
   parentChecked?: boolean;
-  globalExpandPhase?: 0 | 1 | 2;
 }
 
-function GearItem({ item, parentChecked, color = '#A855F7', isSubItem = false, globalExpandPhase }: GearItemExtendedProps) {
+function GearItem({ item, parentChecked, color = '#A855F7', isSubItem = false }: GearItemExtendedProps) {
   const [checked, setChecked] = useState(false);
-  const [folded, setFolded] = useState(true);
   const { language } = useLanguage();
-
-  useEffect(() => {
-    if (globalExpandPhase !== undefined) {
-      if (globalExpandPhase === 2) setFolded(false);
-      else setFolded(true);
-    }
-  }, [globalExpandPhase]);
+  
+  const { expandedNodes, toggleNode } = useContext(GearContext);
+  const nodeId = `item-${item.id}`;
+  const folded = !expandedNodes.has(nodeId);
+  const setFolded = (isFolded: boolean) => toggleNode(nodeId, !isFolded);
 
   useEffect(() => {
     if (parentChecked !== undefined) {
@@ -248,7 +247,7 @@ function GearItem({ item, parentChecked, color = '#A855F7', isSubItem = false, g
           className="pl-7 space-y-2 overflow-hidden"
         >
           {item.sub_items?.map(sub => (
-            <GearItem key={sub.id} item={sub} parentChecked={checked} color={color} isSubItem={true} globalExpandPhase={globalExpandPhase} />
+            <GearItem key={sub.id} item={sub} parentChecked={checked} color={color} isSubItem={true} />
           ))}
           {item.notes?.map(note => {
             const noteName = language === 'hu' && note.name_hu ? note.name_hu : note.name;
@@ -353,7 +352,7 @@ function ExpandableDescription({ text, language }: { text: string; language: str
     <div className="mb-6">
       <p 
         ref={textRef}
-        className={`text-zinc-400 leading-relaxed whitespace-pre-wrap ${!expanded ? 'line-clamp-6 md:line-clamp-5 xl:line-clamp-6' : ''}`}
+        className={`text-zinc-400 leading-relaxed whitespace-pre-wrap ${!expanded ? 'line-clamp-3 lg:line-clamp-4' : ''}`}
       >
         {text}
       </p>
@@ -403,7 +402,56 @@ export default function Itinerary() {
   const [upcomingTitleHu, setUpcomingTitleHu] = useState<string>('');
   const [isMobile, setIsMobile] = useState(false);
   const [mapUnlocked, setMapUnlocked] = useState(false);
-  const [gearExpandPhase, setGearExpandPhase] = useState<0 | 1 | 2>(0);
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+
+  // Derive phase based on nodes
+  const expandableCats = gear.length;
+  let expandableItems = 0;
+  gear.forEach(c => {
+    c.items.forEach(i => {
+      if ((i.sub_items && i.sub_items.length > 0) || (i.notes && i.notes.length > 0)) {
+        expandableItems++;
+      }
+    });
+  });
+
+  const expandedCatsCount = Array.from(expandedNodes).filter(id => id.startsWith('cat-')).length;
+  const expandedItemsCount = Array.from(expandedNodes).filter(id => id.startsWith('item-')).length;
+
+  let gearExpandPhase: 0 | 1 | 2 = 0;
+  if (expandedCatsCount === 0) {
+    gearExpandPhase = 0;
+  } else if (expandedCatsCount === expandableCats && expandedItemsCount === expandableItems) {
+    gearExpandPhase = 2; // Everything open
+  } else {
+    gearExpandPhase = 1; // Mixed
+  }
+
+  const toggleNode = (id: string, isExpanded: boolean) => {
+    setExpandedNodes(prev => {
+      const next = new Set(prev);
+      if (isExpanded) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const handlePhaseCycle = () => {
+    const nextSet = new Set<string>();
+    if (gearExpandPhase === 0) {
+      gear.forEach(c => nextSet.add(`cat-${c.id}`));
+    } else if (gearExpandPhase === 1) {
+      gear.forEach(c => nextSet.add(`cat-${c.id}`));
+      gear.forEach(c => c.items.forEach(i => {
+        if ((i.sub_items?.length || 0) > 0 || (i.notes?.length || 0) > 0) {
+          nextSet.add(`item-${i.id}`);
+        }
+      }));
+    } else {
+      // phase 2 -> 0: close all (empty set)
+    }
+    setExpandedNodes(nextSet);
+  };
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -581,7 +629,7 @@ export default function Itinerary() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "150px" }}
                   transition={{ delay: index * 0.1 }}
-                  className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+                  className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16"
                 >
                   <div className="lg:col-span-1">
                     <div className="sticky top-24">
@@ -602,16 +650,16 @@ export default function Itinerary() {
                   </div>
                   
                   {hasShelter && (
-                  <div className="lg:col-span-2">
+                  <div className="lg:col-span-1">
                     <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 md:p-8 flex flex-col justify-center min-h-[190px]">
                       {isRest ? (
                         <div className="flex w-full items-center justify-between gap-4">
-                           <div className="p-4 bg-zinc-800 rounded-xl text-zinc-400 flex-shrink-0">
-                               <Home size={32} />
+                           <div className="p-2 bg-zinc-800 rounded-lg text-zinc-400 flex-shrink-0">
+                               <Home size={18} />
                            </div>
                            <div className="text-right">
-                               <span className="text-sm text-zinc-500 block uppercase tracking-wider mb-2">{t('Shelter')}</span>
-                               <span className="text-2xl font-bold text-white max-w-[200px] md:max-w-md inline-block">{getDayShelter(day)}</span>
+                               <span className="text-xs text-zinc-500 block mb-1">{t('Shelter')}</span>
+                               <span className="text-sm text-white max-w-[200px] md:max-w-md inline-block">{getDayShelter(day)}</span>
                            </div>
                         </div>
                       ) : (
@@ -713,21 +761,22 @@ export default function Itinerary() {
         <section className="bg-[#0c0c0c] py-24 px-4 md:px-8 border-t border-white/5" id="gear">
           <div className="max-w-7xl mx-auto">
             <h2 className="font-display text-3xl font-bold text-white mb-16 border-b border-white/10 pb-4 text-center uppercase tracking-widest">{t('Expedition Gear')}</h2>
+            <GearContext.Provider value={{ expandedNodes, toggleNode }}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {gear.map((category) => (
-                <GearCategoryCard key={category.id} category={category} language={language} globalExpandPhase={gearExpandPhase} />
+                <GearCategoryCard key={category.id} category={category} language={language} />
               ))}
             </div>
             
             <div className="mt-16 flex justify-center">
               <button 
-                onClick={() => setGearExpandPhase(p => (p + 1) % 3 as 0 | 1 | 2)}
+                onClick={handlePhaseCycle}
                 className={`group relative flex items-center justify-center px-8 py-4 rounded-full transition-all duration-300 shadow-xl border ${
                   gearExpandPhase === 0 
-                  ? 'bg-zinc-900 border-white/10 hover:bg-zinc-800' 
+                  ? 'bg-purple-600 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:bg-purple-500 hover:shadow-[0_0_25px_rgba(168,85,247,0.6)]' 
                   : gearExpandPhase === 1 
-                  ? 'bg-zinc-700 border-white/20 hover:bg-zinc-600' 
-                  : 'bg-purple-600 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:bg-purple-500 hover:shadow-[0_0_25px_rgba(168,85,247,0.6)]'}`}
+                  ? 'bg-purple-900 border-purple-800 hover:bg-purple-800 shadow-[0_0_15px_rgba(168,85,247,0.2)]' 
+                  : 'bg-zinc-900 border-white/10 hover:bg-zinc-800'}`}
               >
                 <span className="text-white text-sm font-bold tracking-widest uppercase">
                   {gearExpandPhase === 0 ? (language === 'hu' ? 'Kategóriák Kinyitása' : 'Expand Categories') :
@@ -736,6 +785,7 @@ export default function Itinerary() {
                 </span>
               </button>
             </div>
+            </GearContext.Provider>
           </div>
         </section>
       </main>
