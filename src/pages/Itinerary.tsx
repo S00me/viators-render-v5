@@ -340,21 +340,31 @@ function RouteKey({ layers }: { layers: MapLayer[] }) {
 
 function ExpandableDescription({ text, language }: { text: string; language: string }) {
   const [expanded, setExpanded] = useState(false);
-  const isLong = text.length > 120;
-  
-  if (!isLong) return <p className="text-zinc-400 leading-relaxed mb-6 whitespace-pre-wrap">{text}</p>;
-  
+  const [isTruncated, setIsTruncated] = useState(false);
+  const textRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (textRef.current) {
+      setIsTruncated(textRef.current.scrollHeight > textRef.current.clientHeight);
+    }
+  }, [text]);
+
   return (
     <div className="mb-6">
-      <p className="text-zinc-400 leading-relaxed whitespace-pre-wrap">
-        {expanded ? text : `${text.slice(0, 100)}...`}
-      </p>
-      <button 
-        onClick={() => setExpanded(!expanded)} 
-        className="text-xs font-bold uppercase tracking-wider text-purple-400 hover:text-purple-300 mt-2 transition-colors"
+      <p 
+        ref={textRef}
+        className={`text-zinc-400 leading-relaxed whitespace-pre-wrap ${!expanded ? 'line-clamp-6 md:line-clamp-5 xl:line-clamp-6' : ''}`}
       >
-        {expanded ? (language === 'hu' ? 'Kevesebb mutatása' : 'Show less') : (language === 'hu' ? 'Több mutatása' : 'Read more')}
-      </button>
+        {text}
+      </p>
+      {(isTruncated || expanded) && (
+        <button 
+          onClick={() => setExpanded(!expanded)} 
+          className="text-xs font-bold uppercase tracking-wider text-purple-400 hover:text-purple-300 mt-2 transition-colors"
+        >
+          {expanded ? (language === 'hu' ? 'Kevesebb mutatása' : 'Show less') : (language === 'hu' ? 'Több mutatása' : 'Read more')}
+        </button>
+      )}
     </div>
   );
 }
@@ -571,15 +581,9 @@ export default function Itinerary() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "150px" }}
                   transition={{ delay: index * 0.1 }}
-                  className={
-                    !hasShelter
-                      ? "grid grid-cols-1 lg:grid-cols-2 gap-8"
-                      : isRest
-                        ? "grid grid-cols-1 lg:grid-cols-3 gap-8"
-                        : "grid grid-cols-1 lg:grid-cols-3 gap-8"
-                  }
+                  className="grid grid-cols-1 lg:grid-cols-3 gap-8"
                 >
-                  <div className={!hasShelter ? "lg:col-span-1" : isRest ? "lg:col-span-2" : "lg:col-span-1"}>
+                  <div className="lg:col-span-1">
                     <div className="sticky top-24">
                       <span className="text-purple-500 font-mono text-xl font-bold block mb-2">{t('DAY')} {day.day_number}</span>
                       <h3 className="text-2xl font-bold text-white mb-4">{getDayTitle(day)}</h3>
@@ -598,42 +602,50 @@ export default function Itinerary() {
                   </div>
                   
                   {hasShelter && (
-                  <div className={isRest ? "lg:col-span-1 lg:flex lg:justify-end" : "lg:col-span-2"}>
-                    <div className={`bg-zinc-900/50 border border-white/10 rounded-2xl p-6 md:p-8 ${isRest ? 'text-right flex flex-col items-end w-full lg:w-auto h-fit min-w-[250px]' : ''}`}>
-                      {!isRest && (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-                          <div className="order-1 md:order-1">
-                            <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Distance')}</span>
-                            <span className="text-xl font-mono font-bold text-white">{getDayKm(day)}</span>
-                          </div>
-                          <div className="order-3 md:order-2">
-                            <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Gain')}</span>
-                            <span className="text-xl font-mono font-bold text-green-400">+{getDayElevationGain(day)}</span>
-                          </div>
-                          <div className="order-4 md:order-3">
-                            <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Loss')}</span>
-                            <span className="text-xl font-mono font-bold text-red-400">-{getDayElevationLoss(day)}</span>
-                          </div>
-                          <div className="order-2 md:order-4">
-                            <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Difficulty')}</span>
-                            <span className="text-xl font-mono font-bold text-white">{getDayDifficulty(day)}</span>
-                          </div>
+                  <div className="lg:col-span-2">
+                    <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 md:p-8 flex flex-col justify-center min-h-[190px]">
+                      {isRest ? (
+                        <div className="flex w-full items-center justify-between gap-4">
+                           <div className="p-4 bg-zinc-800 rounded-xl text-zinc-400 flex-shrink-0">
+                               <Home size={32} />
+                           </div>
+                           <div className="text-right">
+                               <span className="text-sm text-zinc-500 block uppercase tracking-wider mb-2">{t('Shelter')}</span>
+                               <span className="text-2xl font-bold text-white max-w-[200px] md:max-w-md inline-block">{getDayShelter(day)}</span>
+                           </div>
                         </div>
-                      )}
-                      
-                      <div className={`flex flex-col ${!isRest ? 'md:grid md:grid-cols-4' : ''} gap-4 ${!isRest ? 'border-t border-white/5 pt-6' : ''}`}>
-                        <div className={`flex items-center gap-3 ${isRest ? 'justify-end' : ''}`}>
-                          <div className="p-2 bg-zinc-800 rounded-lg text-zinc-400 flex-shrink-0">
-                            <Home size={18} />
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                            <div className="order-1 md:order-1">
+                              <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Distance')}</span>
+                              <span className="text-xl font-mono font-bold text-white">{getDayKm(day)}</span>
+                            </div>
+                            <div className="order-3 md:order-2">
+                              <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Gain')}</span>
+                              <span className="text-xl font-mono font-bold text-green-400">+{getDayElevationGain(day)}</span>
+                            </div>
+                            <div className="order-4 md:order-3">
+                              <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Loss')}</span>
+                              <span className="text-xl font-mono font-bold text-red-400">-{getDayElevationLoss(day)}</span>
+                            </div>
+                            <div className="order-2 md:order-4">
+                              <span className="text-zinc-500 text-xs uppercase tracking-wider block mb-1">{t('Difficulty')}</span>
+                              <span className="text-xl font-mono font-bold text-white">{getDayDifficulty(day)}</span>
+                            </div>
                           </div>
-                          <div className={isRest ? 'text-right' : ''}>
-                            <span className="text-xs text-zinc-500 block">{t('Shelter')}</span>
-                            <span className="text-sm text-white">{getDayShelter(day)}</span>
-                          </div>
-                        </div>
-
-                        {!isRestDay(day) && (
-                          <>
+                        
+                          <div className="flex flex-col md:grid md:grid-cols-4 gap-4 border-t border-white/5 pt-6">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-zinc-800 rounded-lg text-zinc-400 flex-shrink-0">
+                                <Home size={18} />
+                              </div>
+                              <div>
+                                <span className="text-xs text-zinc-500 block">{t('Shelter')}</span>
+                                <span className="text-sm text-white">{getDayShelter(day)}</span>
+                              </div>
+                            </div>
+                            
                             {/* Mobile Icons */}
                             <div className="flex md:hidden items-start justify-between gap-2 border-t border-white/5 pt-4 mt-2">
                               <MobileAmenityIcon 
@@ -684,9 +696,9 @@ export default function Itinerary() {
                                 <span className="text-sm text-white">{day.amenities?.includes('store') ? t('Available') : t('None')}</span>
                               </div>
                             </div>
-                          </>
-                        )}
-                      </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                   )}
@@ -710,14 +722,14 @@ export default function Itinerary() {
             <div className="mt-16 flex justify-center">
               <button 
                 onClick={() => setGearExpandPhase(p => (p + 1) % 3 as 0 | 1 | 2)}
-                className="group relative flex items-center gap-4 bg-zinc-900 border border-white/10 px-6 py-3 rounded-full hover:bg-zinc-800 transition-colors shadow-xl"
+                className={`group relative flex items-center justify-center px-8 py-4 rounded-full transition-all duration-300 shadow-xl border ${
+                  gearExpandPhase === 0 
+                  ? 'bg-zinc-900 border-white/10 hover:bg-zinc-800' 
+                  : gearExpandPhase === 1 
+                  ? 'bg-zinc-700 border-white/20 hover:bg-zinc-600' 
+                  : 'bg-purple-600 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:bg-purple-500 hover:shadow-[0_0_25px_rgba(168,85,247,0.6)]'}`}
               >
-                <div className="flex gap-1.5 items-center justify-center">
-                  <div className={`w-2 h-2 rounded-full transition-colors ${gearExpandPhase === 0 ? 'bg-purple-500' : 'bg-white/20'}`} />
-                  <div className={`w-2 h-2 rounded-full transition-colors ${gearExpandPhase === 1 ? 'bg-purple-500' : 'bg-white/20'}`} />
-                  <div className={`w-2 h-2 rounded-full transition-colors ${gearExpandPhase === 2 ? 'bg-purple-500' : 'bg-white/20'}`} />
-                </div>
-                <span className="text-white text-sm font-medium tracking-wide uppercase">
+                <span className="text-white text-sm font-bold tracking-widest uppercase">
                   {gearExpandPhase === 0 ? (language === 'hu' ? 'Kategóriák Kinyitása' : 'Expand Categories') :
                    gearExpandPhase === 1 ? (language === 'hu' ? 'Részletek Kinyitása' : 'Expand All Details') :
                    (language === 'hu' ? 'Összes Bezárása' : 'Close All')}
