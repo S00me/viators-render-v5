@@ -105,6 +105,22 @@ export function PastTrips() {
 
   const getTripName = (trip: Trip) => language === 'hu' && trip.name_hu ? trip.name_hu : trip.name;
   const getTripLocation = (trip: Trip) => language === 'hu' && trip.location_hu ? trip.location_hu : trip.location;
+
+  const renderTripName = (name: string) => {
+    if (!name) return null;
+    const dashIndex = name.indexOf('-');
+    if (dashIndex !== -1) {
+      const boldPart = name.substring(0, dashIndex);
+      const regularPart = name.substring(dashIndex);
+      return (
+        <>
+          <span className="font-bold">{boldPart}</span>
+          <span className="font-normal">{regularPart}</span>
+        </>
+      );
+    }
+    return <span className="font-bold">{name}</span>;
+  };
   const getTripDescription = (trip: Trip) => language === 'hu' && trip.description_hu ? trip.description_hu : trip.description;
   const getTripDate = (trip: Trip) => language === 'hu' && trip.date_hu ? trip.date_hu : trip.date;
   const getTripElevation = (trip: Trip) => language === 'hu' && trip.elevation_hu ? trip.elevation_hu : trip.elevation;
@@ -163,9 +179,9 @@ export function PastTrips() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="font-display text-4xl md:text-6xl font-bold tracking-tight text-white"
+                    className="font-display text-4xl md:text-6xl tracking-tight text-white m-0"
                   >
-                    {getTripName(selectedTrip)}
+                    {renderTripName(getTripName(selectedTrip))}
                   </motion.h2>
                 </div>
               </div>
@@ -303,7 +319,7 @@ export function PastTrips() {
                       
                       <div className="absolute bottom-0 left-0 right-0 p-6 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                         <span className="text-purple-400 text-xs font-mono mb-2 block">{getTripDate(trip)}</span>
-                        <h3 className="font-display text-2xl font-bold text-white mb-1">{getTripName(trip)}</h3>
+                        <h3 className="font-display text-2xl text-white mb-1">{renderTripName(getTripName(trip))}</h3>
                         <div className="flex items-center gap-4 text-zinc-400 text-sm mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
                           <span className="flex items-center gap-1">
                             <MapPin size={12} /> {getTripLocation(trip)}

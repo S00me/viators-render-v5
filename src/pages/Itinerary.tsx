@@ -368,27 +368,82 @@ function ExpandableDescription({ text, language }: { text: string; language: str
   );
 }
 
-function MobileAmenityIcon({ active, activeNode, inactiveNode, label }: { active: boolean, activeNode: React.ReactNode, inactiveNode: React.ReactNode, label: string }) {
-  const [open, setOpen] = useState(false);
+function MobileAmenitiesRow({ day, t }: { day: ItineraryDay, t: (key: string) => string }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleClick = () => {
+    setShowTooltip(true);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setShowTooltip(false), 15000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
   return (
-    <div className="flex flex-col items-center gap-1 cursor-pointer w-20" onClick={() => setOpen(!open)}>
-      <div className={`p-2 rounded-lg transition-colors ${active ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
-         {active ? activeNode : inactiveNode}
+    <div className="flex md:hidden flex-col gap-4 border-t border-white/5 pt-4 mt-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col items-center gap-1 cursor-pointer w-20" onClick={handleClick}>
+          <div className={`p-2 rounded-lg transition-colors ${day.amenities?.includes('water') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+            <Droplets size={18} />
+          </div>
+        </div>
+        <div className="flex flex-col items-center gap-1 cursor-pointer w-20" onClick={handleClick}>
+          <div className={`p-2 rounded-lg transition-colors ${day.amenities?.includes('food') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+            <Utensils size={18} />
+          </div>
+        </div>
+        <div className="flex flex-col items-center gap-1 cursor-pointer w-20" onClick={handleClick}>
+          <div className={`p-2 rounded-lg transition-colors ${day.amenities?.includes('store') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+            <ShoppingCart size={18} />
+          </div>
+        </div>
       </div>
+      
       <AnimatePresence>
-        {open && (
-           <motion.div 
-             initial={{ opacity: 0, height: 0 }} 
-             animate={{ opacity: 1, height: 'auto' }} 
-             exit={{ opacity: 0, height: 0 }} 
-             className="text-[10px] text-zinc-400 text-center uppercase tracking-wider overflow-hidden mt-1"
-           >
-              {label}
-           </motion.div>
+        {showTooltip && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }} 
+            animate={{ opacity: 1, height: 'auto' }} 
+            exit={{ opacity: 0, height: 0 }}
+            className="flex flex-col gap-3 overflow-hidden bg-zinc-900/80 rounded-xl p-4 border border-white/10"
+          >
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${day.amenities?.includes('water') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                <Droplets size={18} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-zinc-500 block">{t('Water Source')}</span>
+                <span className="text-sm text-white">{day.amenities?.includes('water') ? t('Available') : t('None')}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${day.amenities?.includes('food') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                <Utensils size={18} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-zinc-500 block">{t('Food Source')}</span>
+                <span className="text-sm text-white">{day.amenities?.includes('food') ? t('Available') : t('None')}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${day.amenities?.includes('store') ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
+                <ShoppingCart size={18} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-zinc-500 block">{t('Store')}</span>
+                <span className="text-sm text-white">{day.amenities?.includes('store') ? t('Available') : t('None')}</span>
+              </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }
 
 export default function Itinerary() {
@@ -695,26 +750,7 @@ export default function Itinerary() {
                             </div>
                             
                             {/* Mobile Icons */}
-                            <div className="flex md:hidden items-start justify-between gap-2 border-t border-white/5 pt-4 mt-2">
-                              <MobileAmenityIcon 
-                                active={!!day.amenities?.includes('water')} 
-                                activeNode={<Droplets size={18} />} 
-                                inactiveNode={<Droplets size={18} />} 
-                                label={t('Water Source')} 
-                              />
-                              <MobileAmenityIcon 
-                                active={!!day.amenities?.includes('food')} 
-                                activeNode={<Utensils size={18} />} 
-                                inactiveNode={<Utensils size={18} />} 
-                                label={t('Food Source')} 
-                              />
-                              <MobileAmenityIcon 
-                                active={!!day.amenities?.includes('store')} 
-                                activeNode={<ShoppingCart size={18} />} 
-                                inactiveNode={<ShoppingCart size={18} />} 
-                                label={t('Store')} 
-                              />
-                            </div>
+                            <MobileAmenitiesRow day={day} t={t} />
 
                             {/* Desktop specific amenities */}
                             <div className="hidden md:flex items-center gap-3">
