@@ -43,7 +43,7 @@ export function HiddenAdminButton() {
     <>
       <button
         onClick={handleClick}
-        className="fixed bottom-4 left-4 p-2 bg-black/50 backdrop-blur-md hover:bg-white/10 rounded-full text-white/20 hover:text-white transition-all duration-300 z-[999] border border-white/5"
+        className="fixed bottom-4 left-4 p-2 bg-black/50 backdrop-blur-md hover:bg-white/10 rounded-full text-white/20 hover:text-white transition-all duration-300 z-[999] border border-white/5 hidden md:block"
         title="Admin Mode"
       >
         <Settings size={16} />
