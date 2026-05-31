@@ -5,7 +5,6 @@ import { UpcomingExpedition } from '@/components/sections/UpcomingExpedition';
 import { PastTrips } from '@/components/sections/PastTrips';
 import { Footer } from '@/components/layout/Footer';
 import { HiddenAdminButton } from '@/components/admin/HiddenAdminButton';
-import { ScrollToTop } from '@/components/ui/ScrollToTop';
 
 export default function Home() {
   return (
@@ -24,7 +23,6 @@ export default function Home() {
         </main>
         <Footer />
         <HiddenAdminButton />
-        <ScrollToTop />
       </motion.div>
     </>
   );

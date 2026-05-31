@@ -11,7 +11,6 @@ export function Hero() {
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
   const overlayOpacity = useTransform(scrollY, [0, 500], [0.55, 0.35]);
   const { language, t } = useLanguage();
-  const navigate = useNavigate();
 
   const [route, setRoute] = useState<[number, number][]>([]);
   const [center, setCenter] = useState<[number, number]>([46.0000, 7.7300]);

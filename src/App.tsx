@@ -10,6 +10,7 @@ import Home from '@/pages/Home';
 import Itinerary from '@/pages/Itinerary';
 import About from '@/pages/About';
 import Which from '@/pages/Which';
+import { ScrollToTop } from '@/components/ui/ScrollToTop';
 import Test from '@/pages/Test';
 import { useEffect } from 'react';
 
@@ -88,6 +89,7 @@ function AppContent() {
   return (
     <>
       <LanguageRedirect />
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/test" element={<Test />} />
