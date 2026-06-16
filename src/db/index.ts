@@ -141,6 +141,12 @@ export function initDb() {
     // Column likely already exists
   }
 
+  try {
+    db.exec("ALTER TABLE itinerary_days ADD COLUMN via_ferrata_grade TEXT");
+  } catch (e) {
+    // Column likely already exists
+  }
+
   db.exec(`
     INSERT OR IGNORE INTO upcoming_expedition (id, title, description, elevation, distance, duration, shelter, region, highlights, route_gpx, center_lat, center_lng, zoom, image)
     VALUES (

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { ArrowRight, Mountain, Ruler, Clock } from 'lucide-react';
-import Map from '@/components/map/Map';
 import { parseTrack } from '@/lib/gpx';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -31,8 +30,6 @@ interface UpcomingData {
 
 export function UpcomingExpedition() {
   const [data, setData] = useState<UpcomingData | null>(null);
-  const [route, setRoute] = useState<[number, number][]>([]);
-  const [center, setCenter] = useState<[number, number]>([46.0000, 7.7300]);
   const { language, t } = useLanguage();
 
   useEffect(() => {
@@ -51,15 +48,10 @@ export function UpcomingExpedition() {
         }
         
         setData(json);
-        setCenter([json.center_lat, json.center_lng]);
 
         if (json.route_gpx) {
           try {
-            const coordinates = await parseTrack(json.route_gpx);
-            setRoute(coordinates);
-            if (coordinates.length > 0) {
-              setCenter(coordinates[0]);
-            }
+            await parseTrack(json.route_gpx);
           } catch (e) {
             console.error("Failed to parse GPX", e);
           }

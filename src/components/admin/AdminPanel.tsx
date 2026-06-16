@@ -275,6 +275,7 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
       elevation_gain: '0m',
       elevation_loss: '0m',
       shelter: '',
+      via_ferrata_grade: '',
       amenities: [],
       difficulty: 'Moderate',
       komoot_link: '',
@@ -953,7 +954,7 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                     <input type="text" value={day.difficulty_hu || ''} onChange={(e) => handleItineraryChange(day.id, 'difficulty_hu', e.target.value)} className="bg-black/50 border border-white/10 rounded px-3 py-2 text-white text-sm" placeholder="Difficulty (HU)" />
                     <input type="color" value={day.color} onChange={(e) => handleItineraryChange(day.id, 'color', e.target.value)} className="bg-black/50 border border-white/10 rounded h-10 w-full" title="Route Color" />
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 col-span-2">
                       <label className="flex items-center gap-2 text-sm text-zinc-400">
                         <input type="checkbox" checked={day.amenities?.includes('water') || false} onChange={(e) => handleAmenityChange(day.id, 'water', e.target.checked)} /> Water
                       </label>
@@ -963,6 +964,15 @@ export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
                       <label className="flex items-center gap-2 text-sm text-zinc-400">
                         <input type="checkbox" checked={day.amenities?.includes('store') || false} onChange={(e) => handleAmenityChange(day.id, 'store', e.target.checked)} /> Store
                       </label>
+                      <select value={day.via_ferrata_grade || ''} onChange={(e) => handleItineraryChange(day.id, 'via_ferrata_grade', e.target.value)} className="bg-black/50 border border-white/10 rounded px-2 py-1 text-white text-sm ml-4">
+                        <option value="">No Via Ferrata</option>
+                        <option value="A">Grade A</option>
+                        <option value="B">Grade B</option>
+                        <option value="C">Grade C</option>
+                        <option value="D">Grade D</option>
+                        <option value="E">Grade E</option>
+                        <option value="F">Grade F</option>
+                      </select>
                     </div>
 
                     <input type="text" value={day.komoot_link} onChange={(e) => handleItineraryChange(day.id, 'komoot_link', e.target.value)} className="bg-black/50 border border-white/10 rounded px-3 py-2 text-white text-sm col-span-2" placeholder="Komoot Link" />

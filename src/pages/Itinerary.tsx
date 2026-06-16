@@ -32,6 +32,7 @@ interface ItineraryDay {
   amenities: string[];
   difficulty: string;
   difficulty_hu?: string;
+  via_ferrata_grade?: string;
   komoot_link: string;
   gpx_url: string;
   color: string;
@@ -368,33 +369,38 @@ function ExpandableDescription({ text, language }: { text: string; language: str
   );
 }
 
-function MobileAmenityIcon({ active, activeNode, inactiveNode, label, status }: { active: boolean, activeNode: React.ReactNode, inactiveNode: React.ReactNode, label: string, status: string }) {
-  const [open, setOpen] = useState(false);
+function MobileAmenitiesRow({ day, t, language, open, setOpenRowId }: { day: ItineraryDay, t: (key: string) => string, language: string, open: boolean, setOpenRowId: (id: number | null) => void }) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleClick = () => {
     if (open) {
-      setOpen(false);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      setOpenRowId(null);
     } else {
-      setOpen(true);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(() => {
-        setOpen(false);
-      }, 10000);
+      setOpenRowId(day.id);
     }
   };
 
   useEffect(() => {
+    if (open) {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        setOpenRowId(null);
+      }, 10000);
+    }
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, []);
+  }, [open, setOpenRowId]);
 
-  return (
-    <div className="flex flex-col items-center gap-1 cursor-pointer w-20" onClick={handleClick}>
-      <div className={`p-2 rounded-lg transition-colors ${active ? 'bg-purple-900/30 text-purple-400' : 'bg-zinc-900/50 text-zinc-600'}`}>
-         {active ? activeNode : inactiveNode}
+  const hasWater = !!day.amenities?.includes('water');
+  const hasFood = !!day.amenities?.includes('food');
+  const hasStore = !!day.amenities?.includes('store');
+  const hasViaFerrata = !!day.via_ferrata_grade && day.via_ferrata_grade !== '';
+
+  const renderIcon = (active: boolean, iconNode: React.ReactNode, label: string, statusText: string) => (
+    <div className="flex flex-col items-center gap-1 w-16">
+      <div className={`p-2 rounded-lg transition-colors flex items-center justify-center font-bold ${active ? (label === (language === 'hu' ? 'Via Ferrata' : 'Via Ferrata') ? 'bg-white/90 text-black' : 'bg-purple-900/30 text-purple-400') : 'bg-zinc-900/50 text-zinc-600'}`}>
+        {iconNode}
       </div>
       <AnimatePresence>
         {open && (
@@ -405,12 +411,21 @@ function MobileAmenityIcon({ active, activeNode, inactiveNode, label, status }: 
              className="text-[10px] text-zinc-400 text-center uppercase tracking-wider overflow-hidden mt-1 flex flex-col gap-0.5 items-center"
            >
               <span>{label}</span>
-              <span className="text-white font-bold">{status}</span>
+              <span className="text-white font-bold">{statusText}</span>
            </motion.div>
         )}
       </AnimatePresence>
     </div>
-  )
+  );
+
+  return (
+    <div className={`flex md:hidden items-start ${hasViaFerrata ? 'justify-between' : 'justify-start gap-8'} gap-1 border-t border-white/5 pt-4 mt-2 cursor-pointer`} onClick={handleClick}>
+       {renderIcon(hasWater, <Droplets size={18} />, language === 'hu' ? 'Víz' : t('Water Source'), hasWater ? (language === 'hu' ? 'Elérhető' : t('Available')) : (language === 'hu' ? 'Nincs' : t('None')))}
+       {renderIcon(hasFood, <Utensils size={18} />, language === 'hu' ? 'Étel' : t('Food Source'), hasFood ? (language === 'hu' ? 'Elérhető' : t('Available')) : (language === 'hu' ? 'Nincs' : t('None')))}
+       {renderIcon(hasStore, <ShoppingCart size={18} />, language === 'hu' ? 'Bolt' : t('Store'), hasStore ? (language === 'hu' ? 'Elérhető' : t('Available')) : (language === 'hu' ? 'Nincs' : t('None')))}
+       {hasViaFerrata && renderIcon(hasViaFerrata, <span className="w-[18px] h-[18px] flex items-center justify-center text-sm">{hasViaFerrata ? day.via_ferrata_grade : "-"}</span>, "Via Ferrata", hasViaFerrata ? day.via_ferrata_grade! : (language === 'hu' ? 'Nincs' : t('None')))}
+    </div>
+  );
 }
 
 export default function Itinerary() {
@@ -425,6 +440,7 @@ export default function Itinerary() {
   const [isMobile, setIsMobile] = useState(false);
   const [mapUnlocked, setMapUnlocked] = useState(false);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [openRowId, setOpenRowId] = useState<number | null>(null);
 
   // Derive phase based on nodes
   const expandableCats = gear.length;
@@ -537,8 +553,12 @@ export default function Itinerary() {
   };
 
   const getDayDescription = (day: ItineraryDay) => {
-    if (language === 'hu' && day.description_hu) return day.description_hu;
-    return day.description;
+    let desc = language === 'hu' && day.description_hu ? day.description_hu : day.description;
+    if (day.via_ferrata_grade) {
+      const addition = language === 'hu' ? `\n\nEz az útvonal tartalmaz egy ${day.via_ferrata_grade} nehézségű Via Ferrata-t.` : `\n\nThis route includes a Grade ${day.via_ferrata_grade} Via Ferrata.`;
+      desc = (desc || '') + addition;
+    }
+    return desc || '';
   };
 
   const getDayShelter = (day: ItineraryDay) => {
@@ -717,29 +737,7 @@ export default function Itinerary() {
                             </div>
                             
                             {/* Mobile Icons */}
-                            <div className="flex md:hidden items-start justify-between gap-2 border-t border-white/5 pt-4 mt-2">
-  <MobileAmenityIcon 
-    active={!!day.amenities?.includes('water')} 
-    activeNode={<Droplets size={18} />} 
-    inactiveNode={<Droplets size={18} />} 
-    label={t('Water Source')}
-    status={day.amenities?.includes('water') ? t('Available') : t('None')}
-  />
-  <MobileAmenityIcon 
-    active={!!day.amenities?.includes('food')} 
-    activeNode={<Utensils size={18} />} 
-    inactiveNode={<Utensils size={18} />} 
-    label={t('Food Source')}
-    status={day.amenities?.includes('food') ? t('Available') : t('None')}
-  />
-  <MobileAmenityIcon 
-    active={!!day.amenities?.includes('store')} 
-    activeNode={<ShoppingCart size={18} />} 
-    inactiveNode={<ShoppingCart size={18} />} 
-    label={t('Store')}
-    status={day.amenities?.includes('store') ? t('Available') : t('None')}
-  />
-</div>
+                            <MobileAmenitiesRow day={day} t={t} language={language} open={openRowId === day.id} setOpenRowId={setOpenRowId} />
 
                             {/* Desktop specific amenities */}
                             <div className="hidden md:flex items-center gap-3">
@@ -769,6 +767,17 @@ export default function Itinerary() {
                                 <span className="text-sm text-white">{day.amenities?.includes('store') ? t('Available') : t('None')}</span>
                               </div>
                             </div>
+                            {!!day.via_ferrata_grade && (
+                              <div className="hidden md:flex items-center gap-3">
+                                <div className={`p-2 rounded-lg font-bold flex justify-center items-center h-[34px] w-[34px] text-sm bg-white text-black`}>
+                                  {day.via_ferrata_grade}
+                                </div>
+                                <div>
+                                  <span className="text-xs text-zinc-500 block">{language === 'hu' ? 'Via Ferrata' : 'Via Ferrata'}</span>
+                                  <span className="text-sm text-white">{day.via_ferrata_grade}</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </>
                       )}

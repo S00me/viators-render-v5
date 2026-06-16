@@ -233,24 +233,24 @@ app.get('/api/itinerary', (req, res) => {
 });
 
 app.post('/api/itinerary', requireAdmin, (req, res) => {
-  const { day_number, title, description, km, elevation_gain, elevation_loss, shelter, amenities, difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu } = req.body;
+  const { day_number, title, description, km, elevation_gain, elevation_loss, shelter, amenities, difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu, via_ferrata_grade } = req.body;
   const stmt = db.prepare(`
-    INSERT INTO itinerary_days (day_number, title, description, km, elevation_gain, elevation_loss, shelter, amenities, difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO itinerary_days (day_number, title, description, km, elevation_gain, elevation_loss, shelter, amenities, difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu, via_ferrata_grade)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  const info = stmt.run(day_number, title, description, km, elevation_gain, elevation_loss, shelter, JSON.stringify(amenities || []), difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu);
+  const info = stmt.run(day_number, title, description, km, elevation_gain, elevation_loss, shelter, JSON.stringify(amenities || []), difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu, via_ferrata_grade);
   res.json({ success: true, id: info.lastInsertRowid });
 });
 
 app.put('/api/itinerary/:id', requireAdmin, (req, res) => {
   const { id } = req.params;
-  const { day_number, title, description, km, elevation_gain, elevation_loss, shelter, amenities, difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu } = req.body;
+  const { day_number, title, description, km, elevation_gain, elevation_loss, shelter, amenities, difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu, via_ferrata_grade } = req.body;
   const stmt = db.prepare(`
     UPDATE itinerary_days 
-    SET day_number = ?, title = ?, description = ?, km = ?, elevation_gain = ?, elevation_loss = ?, shelter = ?, amenities = ?, difficulty = ?, komoot_link = ?, gpx_url = ?, color = ?, title_hu = ?, description_hu = ?, shelter_hu = ?, km_hu = ?, elevation_gain_hu = ?, elevation_loss_hu = ?, difficulty_hu = ?
+    SET day_number = ?, title = ?, description = ?, km = ?, elevation_gain = ?, elevation_loss = ?, shelter = ?, amenities = ?, difficulty = ?, komoot_link = ?, gpx_url = ?, color = ?, title_hu = ?, description_hu = ?, shelter_hu = ?, km_hu = ?, elevation_gain_hu = ?, elevation_loss_hu = ?, difficulty_hu = ?, via_ferrata_grade = ?
     WHERE id = ?
   `);
-  stmt.run(day_number, title, description, km, elevation_gain, elevation_loss, shelter, JSON.stringify(amenities || []), difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu, id);
+  stmt.run(day_number, title, description, km, elevation_gain, elevation_loss, shelter, JSON.stringify(amenities || []), difficulty, komoot_link, gpx_url, color, title_hu, description_hu, shelter_hu, km_hu, elevation_gain_hu, elevation_loss_hu, difficulty_hu, via_ferrata_grade, id);
   res.json({ success: true });
 });
 
