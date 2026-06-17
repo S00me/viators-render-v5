@@ -423,7 +423,7 @@ function MobileAmenitiesRow({ day, t, language, open, setOpenRowId }: { day: Iti
        {renderIcon(hasWater, <Droplets size={18} />, language === 'hu' ? 'Víz' : t('Water Source'), hasWater ? (language === 'hu' ? 'Elérhető' : t('Available')) : (language === 'hu' ? 'Nincs' : t('None')))}
        {renderIcon(hasFood, <Utensils size={18} />, language === 'hu' ? 'Étel' : t('Food Source'), hasFood ? (language === 'hu' ? 'Elérhető' : t('Available')) : (language === 'hu' ? 'Nincs' : t('None')))}
        {renderIcon(hasStore, <ShoppingCart size={18} />, language === 'hu' ? 'Bolt' : t('Store'), hasStore ? (language === 'hu' ? 'Elérhető' : t('Available')) : (language === 'hu' ? 'Nincs' : t('None')))}
-       {hasViaFerrata && renderIcon(hasViaFerrata, <span className="w-[18px] h-[18px] flex items-center justify-center text-sm">{hasViaFerrata ? day.via_ferrata_grade : "-"}</span>, "Via Ferrata", hasViaFerrata ? day.via_ferrata_grade! : (language === 'hu' ? 'Nincs' : t('None')))}
+       {hasViaFerrata && renderIcon(hasViaFerrata, <span className="w-[18px] h-[18px] flex items-center justify-center text-sm">{hasViaFerrata ? day.via_ferrata_grade : "-"}</span>, "Via Ferrata", hasViaFerrata ? `Grade: ${day.via_ferrata_grade!}` : (language === 'hu' ? 'Nincs' : t('None')))}
     </div>
   );
 }
@@ -554,10 +554,6 @@ export default function Itinerary() {
 
   const getDayDescription = (day: ItineraryDay) => {
     let desc = language === 'hu' && day.description_hu ? day.description_hu : day.description;
-    if (day.via_ferrata_grade) {
-      const addition = language === 'hu' ? `\n\nEz az útvonal tartalmaz egy ${day.via_ferrata_grade} nehézségű Via Ferrata-t.` : `\n\nThis route includes a Grade ${day.via_ferrata_grade} Via Ferrata.`;
-      desc = (desc || '') + addition;
-    }
     return desc || '';
   };
 
@@ -696,7 +692,7 @@ export default function Itinerary() {
                     <div className="bg-zinc-900/50 border border-white/10 rounded-2xl p-6 md:p-8 flex flex-col justify-center min-h-[190px]">
                       {isRest ? (
                         <div className="flex w-full items-center justify-between gap-4">
-                           <div className="p-2 bg-zinc-800 rounded-lg text-zinc-400 flex-shrink-0">
+                           <div className="p-2 bg-white rounded-lg text-black flex-shrink-0">
                                <Home size={18} />
                            </div>
                            <div className="text-right">
@@ -727,7 +723,7 @@ export default function Itinerary() {
                         
                           <div className="flex flex-col md:grid md:grid-cols-4 gap-4 border-t border-white/5 pt-6">
                             <div className="flex items-center gap-3">
-                              <div className="p-2 bg-zinc-800 rounded-lg text-zinc-400 flex-shrink-0">
+                              <div className="p-2 bg-white rounded-lg text-black flex-shrink-0">
                                 <Home size={18} />
                               </div>
                               <div>
@@ -774,7 +770,7 @@ export default function Itinerary() {
                                 </div>
                                 <div>
                                   <span className="text-xs text-zinc-500 block">{language === 'hu' ? 'Via Ferrata' : 'Via Ferrata'}</span>
-                                  <span className="text-sm text-white">{day.via_ferrata_grade}</span>
+                                  <span className="text-sm text-white">{language === 'hu' ? `Grade: ${day.via_ferrata_grade}` : `Grade: ${day.via_ferrata_grade}`}</span>
                                 </div>
                               </div>
                             )}
